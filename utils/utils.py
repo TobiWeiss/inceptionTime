@@ -94,7 +94,7 @@ def read_all_datasets(root_dir, archive_name):
     elif archive_name == 'InlineSkateXPs':
 
         for dataset_name in utils.constants.dataset_names_for_archive[archive_name]:
-            root_dir_dataset = root_dir + '/archives/' + archive_name + '/' + dataset_name + '/'
+            root_dir_dataset = root_dir + '/data/' + dataset_name + '/'
 
             x_train = np.load(root_dir_dataset + 'x_train.npy')
             y_train = np.load(root_dir_dataset + 'y_train.npy')
@@ -384,7 +384,7 @@ def separate_data_to_train_test():
     dataset = pd.DataFrame(dataset)
     dataset = dataset.values.tolist()
     properties_folder = Path("data/ma_barth_data/Data_props_encoded")
-    file_to_open = properties_folder / "Family.csv"
+    file_to_open = properties_folder / "Single.csv"
     properties = pd.read_csv(file_to_open, sep = ' ', header = None)
     properties = pd.DataFrame(properties)
     properties = properties.values.tolist()
@@ -396,7 +396,7 @@ def separate_data_to_train_test():
             if int(row[0]) == int(row2[0]) :
                 merged.append([row2[1]] + row[1:-1])
     
-    with open('archives/TSC/CER/CER_TRAIN', 'w') as myfile:
+    with open('data/data_by_properties/single/single_train', 'w') as myfile:
         wr = csv.writer(myfile)
         counter = 0
         for row in merged:
@@ -404,7 +404,7 @@ def separate_data_to_train_test():
                 wr.writerow(row)
                 counter = counter + 1
     
-    with open('archives/TSC/CER/CER_TEST', 'w') as myfile:
+    with open('data/data_by_properties/single/single_test', 'w') as myfile:
         wr = csv.writer(myfile)
         counter = 500
         while counter < 700:

@@ -81,7 +81,7 @@ def get_xp_val(xp):
 
 
 ############################################### main
-root_dir = '/Users/tobiasweiss/ma/InceptionTime'
+root_dir = './'
 xps = ['use_bottleneck', 'use_residual', 'nb_filters', 'depth',
        'kernel_size', 'batch_size']
 
