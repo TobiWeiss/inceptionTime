@@ -385,7 +385,7 @@ def separate_data_to_train_test():
     dataset = dataset.values.tolist()
     properties_folder = Path("data/ma_barth_data/Data_props_encoded")
     file_to_open = properties_folder / "Single.csv"
-    properties = pd.read_csv(file_to_open, sep = ' ', header = None)
+    properties = pd.read_csv(file_to_open, sep = ';', header = None)
     properties = pd.DataFrame(properties)
     properties = properties.values.tolist()
     merged = []
