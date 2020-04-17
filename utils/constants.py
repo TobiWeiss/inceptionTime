@@ -13,6 +13,6 @@ InlineSkateXPs_DATASETS = ['InlineSkate-32', 'InlineSkate-64', 'InlineSkate-128'
                            'InlineSkate-256', 'InlineSkate-512', 'InlineSkate-1024',
                            'InlineSkate-2048']
 
-dataset_names_for_archive = {'TSC': UNIVARIATE_DATASET_NAMES,
+dataset_names_for_archive = {'': UNIVARIATE_DATASET_NAMES,
                              'SITS': SITS_DATASETS,
                              'InlineSkateXPs': InlineSkateXPs_DATASETS}

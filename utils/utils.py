@@ -74,12 +74,12 @@ def read_all_datasets(root_dir, archive_name):
 
     dataset_names_to_sort = []
 
-    if archive_name == 'TSC':
+    if archive_name == '':
         for dataset_name in DATASET_NAMES:
-            root_dir_dataset = root_dir + '/archives/' + archive_name + '/' + dataset_name + '/'
+            root_dir_dataset = 'data/data_by_properties/' + dataset_name + '/'
             file_name = root_dir_dataset + dataset_name
-            x_train, y_train = readucr(file_name + '_TRAIN')
-            x_test, y_test = readucr(file_name + '_TEST')
+            x_train, y_train = readucr(file_name + '_train')
+            x_test, y_test = readucr(file_name + '_test')
 
             datasets_dict[dataset_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
                                            y_test.copy())
