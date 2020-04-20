@@ -159,9 +159,7 @@ def generate_results_csv(output_file_name, root_dir, clfs):
 
             curr_archive_name = archive_name
             for dataset_name in datasets_dict.keys():
-                output_dir = root_dir + '/results/' + classifier_name + '/' \
-                             + curr_archive_name + '/' + dataset_name + '/' + 'df_metrics.csv'
-                print(output_dir)
+                output_dir = root_dir + '/results/' + dataset_name + '/' + 'df_metrics.csv'
                 if not os.path.exists(output_dir):
                     continue
                 df_metrics = pd.read_csv(output_dir)
