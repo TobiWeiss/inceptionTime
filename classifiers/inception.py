@@ -2,10 +2,12 @@
 import keras
 import numpy as np
 import time
+import tensorflow as tf
 
 from utils.utils import save_logs
 from utils.utils import calculate_metrics
 from utils.utils import save_test_duration
+
 
 
 
@@ -112,8 +114,13 @@ class Classifier_INCEPTION:
         # if len(keras.backend.tensorflow) == 0:
         #     print('error no gpu')
         #     exit()
+        # else:
+        #     keras
+        #     print('GPU found')    
         # x_val and y_val are only used to monitor the test loss and NOT for training
-
+        
+        sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+        
         if self.batch_size is None:
             mini_batch_size = int(min(x_train.shape[0] / 10, 16))
         else:

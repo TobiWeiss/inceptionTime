@@ -26,7 +26,6 @@ from numpy.lib.npyio import loadtxt, savetxt
 from numpy import genfromtxt
 import csv
 
-
 def check_if_file_exits(file_name):
     return os.path.exists(file_name)
 

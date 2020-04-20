@@ -7,9 +7,6 @@ import gc
 from utils.constants import UNIVARIATE_ARCHIVE_NAMES  as ARCHIVE_NAMES
 import time
 
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
-
 
 class Classifier_NNE:
 
