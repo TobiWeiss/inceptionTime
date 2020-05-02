@@ -1,9 +1,9 @@
-from utils.constants import UNIVARIATE_ARCHIVE_NAMES as ARCHIVE_NAMES
+from utils.constants import PROPERTY_NAMES
+from utils.constants import ROOT_DIRECTORY
 
-from utils.utils import read_all_datasets
+from utils.utils import read_all_properties
 from utils.utils import transform_labels
 from utils.utils import create_directory
-from utils.utils import run_length_xps
 from utils.utils import generate_results_csv, separate_data_to_train_test
 
 import utils
@@ -81,17 +81,17 @@ def get_xp_val(xp):
 
 
 ############################################### main
-root_dir = './'
+root_dir = ROOT_DIRECTORY
 xps = ['use_bottleneck', 'use_residual', 'nb_filters', 'depth',
        'kernel_size', 'batch_size']
 
 if sys.argv[1] == 'InceptionTime':
     # run nb_iter_ iterations of Inception on the whole TSC archive
     classifier_name = 'inception'
-    archive_name = ARCHIVE_NAMES[0]
+    property_name = PROPERTY_NAMES[0]
     nb_iter_ = 5
 
-    datasets_dict = read_all_datasets(root_dir, archive_name)
+    datasets_dict = read_all_properties(root_dir)
 
     for iter in range(nb_iter_):
         print('\t\titer', iter)
@@ -100,9 +100,9 @@ if sys.argv[1] == 'InceptionTime':
         if iter != 0:
             trr = '_itr_' + str(iter)
 
-        tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + archive_name + trr + '/'
+        tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + property_name + trr + '/'
 
-        for dataset_name in utils.constants.dataset_names_for_archive[archive_name]:
+        for dataset_name in utils.constants.dataset_names_for_archive[property_name]:
             print('\t\t\tdataset_name: ', dataset_name)
 
             x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
@@ -125,11 +125,11 @@ if sys.argv[1] == 'InceptionTime':
     # run the ensembling of these iterations of Inception
     classifier_name = 'nne'
 
-    datasets_dict = read_all_datasets(root_dir, archive_name)
+    datasets_dict = read_all_properties(root_dir, property_name)
 
-    tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + archive_name + '/'
+    tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + property_name + '/'
 
-    for dataset_name in utils.constants.dataset_names_for_archive[archive_name]:
+    for dataset_name in utils.constants.dataset_names_for_archive[property_name]:
         print('\t\t\tdataset_name: ', dataset_name)
 
         x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
@@ -143,11 +143,11 @@ if sys.argv[1] == 'InceptionTime':
 elif sys.argv[1] == 'InceptionTime_xp':
     # this part is for running inception with the different hyperparameters
     # listed in the paper, on the whole TSC archive
-    archive_name = 'TSC'
+    property_name = 'TSC'
     classifier_name = 'inception'
     max_iterations = 5
 
-    datasets_dict = read_all_datasets(root_dir, archive_name)
+    datasets_dict = read_all_properties(root_dir, property_name)
 
     for xp in xps:
 
@@ -167,10 +167,10 @@ elif sys.argv[1] == 'InceptionTime_xp':
                     trr = '_itr_' + str(iter)
                 print('\t\titer', iter)
 
-                for dataset_name in utils.constants.dataset_names_for_archive[archive_name]:
+                for dataset_name in utils.constants.dataset_names_for_archive[property_name]:
 
                     output_directory = root_dir + '/results/' + classifier_name + '/' + '/' + xp + '/' + '/' + str(
-                        xp_val) + '/' + archive_name + trr + '/' + dataset_name + '/'
+                        xp_val) + '/' + property_name + trr + '/' + dataset_name + '/'
 
                     print('\t\t\tdataset_name', dataset_name)
                     x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
@@ -199,12 +199,12 @@ elif sys.argv[1] == 'InceptionTime_xp':
                     print('\t\t\t\t', 'DONE')
 
     # we now need to ensemble each iteration of inception (aka InceptionTime)
-    archive_name = ARCHIVE_NAMES[0]
+    property_name = PROPERTY_NAMES[0]
     classifier_name = 'nne'
 
-    datasets_dict = read_all_datasets(root_dir, archive_name)
+    datasets_dict = read_all_properties(root_dir, property_name)
 
-    tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + archive_name + '/'
+    tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + property_name + '/'
 
     for xp in xps:
         xp_arr = get_xp_val(xp)
@@ -212,7 +212,7 @@ elif sys.argv[1] == 'InceptionTime_xp':
 
             clf_name = 'inception/' + xp + '/' + str(xp_val)
 
-            for dataset_name in utils.constants.dataset_names_for_archive[archive_name]:
+            for dataset_name in utils.constants.dataset_names_for_archive[property_name]:
                 x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
 
                 output_directory = tmp_output_directory + dataset_name + '/'

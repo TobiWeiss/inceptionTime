@@ -1,18 +1,20 @@
-UNIVARIATE_DATASET_NAMES = ['single']
+#Root directory
+ROOT_DIRECTORY = './'
 
-# UNIVARIATE_DATASET_NAMES = ['Meat', 'Coffee']
+#Root directory for prepared data used for training
+DATA_ROOT_DIRECTORY = 'data/data_by_properties/'
 
-#UNIVARIATE_ARCHIVE_NAMES = ['TSC', 'InlineSkateXPs', 'SITS']
-UNIVARIATE_ARCHIVE_NAMES = ['']
+#Root directory for data by weeks
+DATA_WEEKS_ROOT_DIRECORY = 'data/data_by_weeks/'
 
-SITS_DATASETS = ['SatelliteFull_TRAIN_c301', 'SatelliteFull_TRAIN_c200', 'SatelliteFull_TRAIN_c451',
-                 'SatelliteFull_TRAIN_c89', 'SatelliteFull_TRAIN_c677', 'SatelliteFull_TRAIN_c59',
-                 'SatelliteFull_TRAIN_c133']
+#Root directory for properties by household_id
+DATA_PROPERTIES_ROOT_DIRECTORY = 'data/ma_barth_data/Data_props_encoded/'
 
-InlineSkateXPs_DATASETS = ['InlineSkate-32', 'InlineSkate-64', 'InlineSkate-128',
-                           'InlineSkate-256', 'InlineSkate-512', 'InlineSkate-1024',
-                           'InlineSkate-2048']
+#Root direcotry for results
+RESULTS_ROOT_DIRECTORY = 'results/'
 
-dataset_names_for_archive = {'': UNIVARIATE_DATASET_NAMES,
-                             'SITS': SITS_DATASETS,
-                             'InlineSkateXPs': InlineSkateXPs_DATASETS}
+#Reference Properties you wish to classify here
+PROPERTY_NAMES = ['single']
+
+
+dataset_names_for_archive = {'': PROPERTY_NAMES}

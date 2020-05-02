@@ -14,12 +14,17 @@ import os
 import operator
 import utils
 
-from utils.constants import UNIVARIATE_DATASET_NAMES as DATASET_NAMES
-from utils.constants import UNIVARIATE_ARCHIVE_NAMES  as ARCHIVE_NAMES
+from utils.constants import PROPERTY_NAMES
+from utils.constants import DATA_ROOT_DIRECTORY
+from utils.constants import RESULTS_ROOT_DIRECTORY
+from utils.constants import DATA_WEEKS_ROOT_DIRECORY
+from utils.constants import DATA_PROPERTIES_ROOT_DIRECTORY
 
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
+from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import LabelEncoder
 from pathlib import Path
 from numpy.lib.npyio import loadtxt, savetxt
@@ -29,20 +34,29 @@ import csv
 def check_if_file_exits(file_name):
     return os.path.exists(file_name)
 
-
+#Y: Slices Array taking all rows (:) but keeping only the first column (0)
+#X: Slices Array taking all rows (:) but keeping all columns except the first (1:)
 def readucr(filename, delimiter=','):
     data = np.loadtxt(filename, delimiter=delimiter)
     Y = data[:, 0]
     X = data[:, 1:]
     return X, Y
 
-
+#Y: Slices Array taking all rows (:) but keeping only the last column (-1)
+#X: Slices Array taking all rows (:) but keeping all columns except the last one (:-1)
 def readsits(filename, delimiter=','):
     data = np.loadtxt(filename, delimiter=delimiter)
     Y = data[:, -1]
     X = data[:, :-1]
     return X, Y
 
+#Reads a csv file into a list
+def read_csv_to_list(path, delimiter = ' '):
+    dataset = pd.read_csv(path, sep=delimiter, header= None)
+    dataset = pd.DataFrame(dataset)
+    dataset = dataset.values.tolist()
+
+    return dataset
 
 def create_directory(directory_path):
     if os.path.exists(directory_path):
@@ -55,60 +69,67 @@ def create_directory(directory_path):
             return None
         return directory_path
 
+def combine_consumption_property_data(consumption, properties):
+    consumption_data_with_property = []
+    
+    for consumption_row in consumption:
+        for property_row in properties:
+            if int(consumption_row[0]) == int(property_row[0]) :
+                consumption_data_with_property.append([property_row[1]] + consumption_row[1:-1])
 
-def read_dataset(root_dir, archive_name, dataset_name):
-    datasets_dict = {}
+def separate_data_to_train_test(week, property):
+    
+    consumption = read_csv_to_list(DATA_WEEKS_ROOT_DIRECORY + "DateienWoche" + week)
+    properties = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + property + ".csv")
 
-    file_name = root_dir + '/archives/' + archive_name + '/' + dataset_name + '/' + dataset_name
-    x_train, y_train = readucr(file_name + '_TRAIN')
-    x_test, y_test = readucr(file_name + '_TEST')
-    datasets_dict[dataset_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
-                                   y_test.copy())
+    consumption_data_with_property = combine_consumption_property_data(consumption, properties)
+    
+    create_directory(DATA_ROOT_DIRECTORY +  property)
+    
+    with open(DATA_ROOT_DIRECTORY +  property + '_train', 'w+') as myfile:
+        wr = csv.writer(myfile)
+        counter = 0
+        for row in consumption_data_with_property:
+            if counter < 499:
+                wr.writerow(row)
+                counter = counter + 1
+    
+    with open(DATA_ROOT_DIRECTORY +  property + '_test', 'w+') as myfile:
+        wr = csv.writer(myfile)
+        counter = 500
+        while counter < 700:
+            wr.writerow(consumption_data_with_property[counter])
+            counter = counter + 1
 
-    return datasets_dict
+    #savetxt('data.csv', merged, delimiter=',')
 
-
-def read_all_datasets(root_dir, archive_name):
-    datasets_dict = {}
+# Reads the prepared data for each referenced property into a dictionary
+# e.g. datasets_dict['single'][0] returns the training data for the property single
+def read_all_properties(root_dir):
+    properties_dict = {}
 
     dataset_names_to_sort = []
 
-    if archive_name == '':
-        for dataset_name in DATASET_NAMES:
-            root_dir_dataset = 'data/data_by_properties/' + dataset_name + '/'
-            file_name = root_dir_dataset + dataset_name
-            x_train, y_train = readucr(file_name + '_train')
-            x_test, y_test = readucr(file_name + '_test')
+    
+    for property_name in PROPERTY_NAMES:
+        root_dir_dataset = root_dir + DATA_ROOT_DIRECTORY + property_name + '/'
+        file_name = root_dir_dataset + property_name
+        x_train, y_train = readucr(file_name + '_train')
+        x_test, y_test = readucr(file_name + '_test')
 
-            datasets_dict[dataset_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
+        properties_dict[property_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
                                            y_test.copy())
 
-            dataset_names_to_sort.append((dataset_name, len(x_train)))
+        # dataset_names_to_sort.append((property_name, len(x_train)))
 
-        dataset_names_to_sort.sort(key=operator.itemgetter(1))
+        # dataset_names_to_sort.sort(key=operator.itemgetter(1))
 
-        for i in range(len(DATASET_NAMES)):
-            DATASET_NAMES[i] = dataset_names_to_sort[i][0]
+        # print(dataset_names_to_sort)
 
-    elif archive_name == 'InlineSkateXPs':
+        # for i in range(len(PROPERTY_NAMES)):
+        #     PROPERTY_NAMES[i] = dataset_names_to_sort[i][0]
 
-        for dataset_name in utils.constants.dataset_names_for_archive[archive_name]:
-            root_dir_dataset = root_dir + '/data/' + dataset_name + '/'
-
-            x_train = np.load(root_dir_dataset + 'x_train.npy')
-            y_train = np.load(root_dir_dataset + 'y_train.npy')
-            x_test = np.load(root_dir_dataset + 'x_test.npy')
-            y_test = np.load(root_dir_dataset + 'y_test.npy')
-
-            datasets_dict[dataset_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
-                                           y_test.copy())
-    elif archive_name == 'SITS':
-        return read_sits_xps(root_dir)
-    else:
-        print('error in archive name')
-        exit()
-
-    return datasets_dict
+    return properties_dict
 
 
 def calculate_metrics(y_true, y_pred, duration):
@@ -117,6 +138,8 @@ def calculate_metrics(y_true, y_pred, duration):
     res['precision'] = precision_score(y_true, y_pred, average='macro')
     res['accuracy'] = accuracy_score(y_true, y_pred)
     res['recall'] = recall_score(y_true, y_pred, average='macro')
+    res['auc'] = roc_auc_score(y_true, y_pred, average='macro')
+    res['mcc'] = matthews_corrcoef(y_true, y_pred, average='macro')
     res['duration'] = duration
     return res
 
@@ -127,7 +150,7 @@ def save_test_duration(file_name, test_duration):
     res['test_duration'] = test_duration
     res.to_csv(file_name, index=False)
 
-
+#Transforms class labels into numerical values from 0 to n-1 classes
 def transform_labels(y_train, y_test):
     """
     Transform label to min equal zero and continuous
@@ -147,28 +170,25 @@ def transform_labels(y_train, y_test):
     new_y_test = new_y_train_test[len(y_train):]
     return new_y_train, new_y_test
 
-
+#generates a .csv-file with results for all properties combined
 def generate_results_csv(output_file_name, root_dir, clfs):
     res = pd.DataFrame(data=np.zeros((0, 8), dtype=np.float), index=[],
-                       columns=['classifier_name', 'archive_name', 'dataset_name', 'iteration',
-                                'precision', 'accuracy', 'recall', 'duration'])
-    for archive_name in ARCHIVE_NAMES:
-        datasets_dict = read_all_datasets(root_dir, archive_name)
-        for classifier_name in clfs:
-            durr = 0.0
+                       columns=['property_name', 'iteration',
+                                'precision', 'accuracy', 'recall', 'auc', 'mcc', 'duration'])
 
-            curr_archive_name = archive_name
-            for dataset_name in datasets_dict.keys():
-                output_dir = root_dir + '/results/' + dataset_name + '/' + 'df_metrics.csv'
-                if not os.path.exists(output_dir):
-                    continue
-                df_metrics = pd.read_csv(output_dir)
-                df_metrics['classifier_name'] = classifier_name
-                df_metrics['archive_name'] = archive_name
-                df_metrics['dataset_name'] = dataset_name
-                df_metrics['iteration'] = 0
-                res = pd.concat((res, df_metrics), axis=0, sort=False)
-                durr += df_metrics['duration'][0]
+    properties_dict = read_all_properties()
+    for classifier_name in clfs:
+        durr = 0.0
+
+        for property_name in properties_dict.keys():
+            output_dir = root_dir + '/results/' + property_name + '/' + 'df_metrics.csv'
+            if not os.path.exists(output_dir):
+                continue
+            df_metrics = pd.read_csv(output_dir)
+            df_metrics['property_name'] = property_name
+            df_metrics['iteration'] = 0
+            res = pd.concat((res, df_metrics), axis=0, sort=False)
+            durr += df_metrics['duration'][0]
 
     res.to_csv(root_dir + output_file_name, index=False)
 
@@ -222,193 +242,6 @@ def save_logs(output_directory, hist, y_pred, y_true, duration,
 
     return df_metrics
 
-
-def create_synthetic_dataset(pattern_len=[0.25], pattern_pos=[0.1, 0.65], ts_len=128, ts_n=128):
-    random.seed(1234)
-    np.random.seed(1234)
-
-    nb_classes = len(pattern_pos) * len(pattern_len)
-
-    out_dir = '/b/home/uha/hfawaz-datas/dl-tsc/archives/UCRArchive_2018/BinaryData/'
-
-    create_directory(out_dir)
-
-    x_train = np.random.normal(0.0, 0.1, size=(ts_n, ts_len))
-    x_test = np.random.normal(0.0, 0.1, size=(ts_n, ts_len))
-
-    y_train = np.random.randint(low=0, high=nb_classes, size=(ts_n,))
-    y_test = np.random.randint(low=0, high=nb_classes, size=(ts_n,))
-
-    # make sure at least each class has one example
-    y_train[:nb_classes] = np.arange(start=0, stop=nb_classes, dtype=np.int32)
-    y_test[:nb_classes] = np.arange(start=0, stop=nb_classes, dtype=np.int32)
-
-    # each class is defined with a certain combination of pattern_pos and pattern_len
-    # with one pattern_len and two pattern_pos we can create only two classes
-    # example:  class 0 _____-_  & class 1 _-_____
-
-    # create the class definitions
-    class_def = [None for i in range(nb_classes)]
-
-    idx_class = 0
-    for pl in pattern_len:
-        for pp in pattern_pos:
-            class_def[idx_class] = {'pattern_len': int(pl * ts_len),
-                                    'pattern_pos': int(pp * ts_len)}
-            idx_class += 1
-
-    # create the dataset
-    for i in range(ts_n):
-        # for the train
-        c = y_train[i]
-        curr_pattern_pos = class_def[c]['pattern_pos']
-        curr_pattern_len = class_def[c]['pattern_len']
-        x_train[i][curr_pattern_pos:curr_pattern_pos + curr_pattern_len] = \
-            x_train[i][curr_pattern_pos:curr_pattern_pos + curr_pattern_len] + 1.0
-
-        # for the test
-        c = y_test[i]
-        curr_pattern_pos = class_def[c]['pattern_pos']
-        curr_pattern_len = class_def[c]['pattern_len']
-        x_test[i][curr_pattern_pos:curr_pattern_pos + curr_pattern_len] = \
-            x_test[i][curr_pattern_pos:curr_pattern_pos + curr_pattern_len] + 1.0
-
-    # znorm
-    x_train = (x_train - x_train.mean(axis=1, keepdims=True)) \
-              / x_train.std(axis=1, keepdims=True)
-
-    x_test = (x_test - x_test.mean(axis=1, keepdims=True)) \
-             / x_test.std(axis=1, keepdims=True)
-
-    # visualize example
-    # plt.figure()
-    # colors = generate_array_of_colors(nb_classes)
-    # for c in range(nb_classes):
-    #     plt.plot(x_train[y_train == c][0], color=colors[c], label='class-' + str(c))
-    # plt.legend(loc='best')
-    # plt.savefig('out.pdf')
-    # exit()
-
-    # np.save(out_dir+'x_train.npy',x_train)
-    # np.save(out_dir+'y_train.npy',y_train)
-    # np.save(out_dir+'x_test.npy',x_test)
-    # np.save(out_dir+'y_test.npy',y_test)
-
-    # print('Done creating dataset!')
-
-    return x_train, y_train, x_test, y_test
-
-
-def generate_array_of_colors(n):
-    # https://www.quora.com/How-do-I-generate-n-visually-distinct-RGB-colours-in-Python
-    ret = []
-    r = int(random.random() * 256)
-    g = int(random.random() * 256)
-    b = int(random.random() * 256)
-    alpha = 1.0
-    step = 256 / n
-    for i in range(n):
-        r += step
-        g += step
-        b += step
-        r = int(r) % 256
-        g = int(g) % 256
-        b = int(b) % 256
-        ret.append((r / 255, g / 255, b / 255, alpha))
-    return ret
-
-
-def read_sits_xps(root_dir):
-    datasets_dict = {}
-    path_to_data = root_dir + 'archives/SITS/resampled-SITS/'
-    path_to_test = root_dir + 'archives/SITS/' + 'SatelliteFull_TEST_1000.csv'
-
-    x_test, y_test = readsits(path_to_test)
-
-    for subdir, dirs, files in os.walk(path_to_data):
-        for file_name in files:
-            arr = file_name.split('.')
-            dataset_name = arr[0]
-            file_type = arr[1]
-            if file_type == 'csv':
-                x_train, y_train = readsits(subdir + '/' + file_name)
-
-                datasets_dict[dataset_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
-                                               y_test.copy())
-
-    return datasets_dict
-
-
-def resample_dataset(x, rate):
-    new_x = np.zeros(shape=(x.shape[0], rate))
-    from scipy import signal
-    for i in range(x.shape[0]):
-        f = signal.resample(x[0], rate)
-        new_x[i] = f
-    return new_x
-
-
-def run_length_xps(root_dir):
-    archive_name = ARCHIVE_NAMES[0]
-    dataset_name = 'InlineSkate'
-    datasets_dict = read_dataset(root_dir, archive_name, dataset_name)
-
-    lengths = [2 ** i for i in range(5, 12)]
-
-    x_train = datasets_dict[dataset_name][0]
-    y_train = datasets_dict[dataset_name][1]
-    x_test = datasets_dict[dataset_name][2]
-    y_test = datasets_dict[dataset_name][3]
-
-    new_archive_name = 'InlineSkateXPs'
-
-    for l in lengths:
-        new_x_train = resample_dataset(x_train, l)
-        new_x_test = resample_dataset(x_test, l)
-        new_dataset_name = dataset_name + '-' + str(l)
-        new_dataset_dir = root_dir + 'archives/' + new_archive_name + '/' + new_dataset_name + '/'
-        create_directory(new_dataset_dir)
-
-        np.save(new_dataset_dir + 'x_train.npy', new_x_train)
-        np.save(new_dataset_dir + 'y_train.npy', y_train)
-        np.save(new_dataset_dir + 'x_test.npy', new_x_test)
-        np.save(new_dataset_dir + 'y_test.npy', y_test)
-
-def separate_data_to_train_test():
-    data_folder = Path("data/Data_Weeks_10-20")
-    file_to_open = data_folder / "DateienWoche11"
-    dataset = pd.read_csv(file_to_open, sep=" ", header= None)
-    dataset = pd.DataFrame(dataset)
-    dataset = dataset.values.tolist()
-    properties_folder = Path("data/ma_barth_data/Data_props_encoded")
-    file_to_open = properties_folder / "Single.csv"
-    properties = pd.read_csv(file_to_open, sep = ';', header = None)
-    properties = pd.DataFrame(properties)
-    properties = properties.values.tolist()
-    merged = []
-    counter = 0
-
-    for row in dataset:
-        for row2 in properties:
-            if int(row[0]) == int(row2[0]) :
-                merged.append([row2[1]] + row[1:-1])
-    
-    with open('data/data_by_properties/single/single_train', 'w') as myfile:
-        wr = csv.writer(myfile)
-        counter = 0
-        for row in merged:
-            if counter < 499:
-                wr.writerow(row)
-                counter = counter + 1
-    
-    with open('data/data_by_properties/single/single_test', 'w') as myfile:
-        wr = csv.writer(myfile)
-        counter = 500
-        while counter < 700:
-            wr.writerow(merged[counter])
-            counter = counter + 1
-
-    #savetxt('data.csv', merged, delimiter=',')
 
    
   
