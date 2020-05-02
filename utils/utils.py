@@ -235,7 +235,7 @@ def save_logs(output_directory, hist, y_pred, y_true, duration,
     df_best_model['best_model_train_loss'] = row_best_model['loss']
     if plot_test_acc:
         df_best_model['best_model_val_loss'] = row_best_model['val_loss']
-    df_best_model['best_model_train_acc'] = row_best_model['acc']
+    #df_best_model['best_model_train_acc'] = row_best_model['acc']
     if plot_test_acc:
         df_best_model['best_model_val_acc'] = row_best_model['val_acc']
     if lr == True:
