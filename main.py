@@ -11,7 +11,7 @@ import numpy as np
 import sys
 import sklearn
 
-separate_data_to_train_test()
+separate_data_to_train_test('11', 'single')
 
 def prepare_data():
     x_train = datasets_dict[dataset_name][0]
