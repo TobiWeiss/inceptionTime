@@ -80,8 +80,8 @@ def combine_consumption_property_data(consumption, properties):
 
     return consumption_data_with_property
 
-def create_training_data(consumption_data_with_property):
-      with open(DATA_ROOT_DIRECTORY +  property + '_train', 'w+') as myfile:
+def create_training_data(consumption_data_with_property, property):
+      with open(DATA_ROOT_DIRECTORY + property + '/' + property + '_train', 'w+') as myfile:
         wr = csv.writer(myfile)
         counter = 0
         amount_of_rows = len(consumption_data_with_property) * 0.8
@@ -90,8 +90,8 @@ def create_training_data(consumption_data_with_property):
                 wr.writerow(row)
                 counter = counter + 1
 
-def create_test_data(consumption_data_with_property):
-      with open(DATA_ROOT_DIRECTORY +  property + '_test', 'w+') as myfile:
+def create_test_data(consumption_data_with_property, property):
+      with open(DATA_ROOT_DIRECTORY + property + '/' + property + '_test', 'w+') as myfile:
         wr = csv.writer(myfile)
         counter = len(consumption_data_with_property) * 0.8 + 1
         amount_of_rows = len(consumption_data_with_property)
@@ -103,13 +103,13 @@ def create_test_data(consumption_data_with_property):
 def separate_data_to_train_test(week, property):
     
     consumption = read_csv_to_list(DATA_WEEKS_ROOT_DIRECORY + "DateienWoche" + week)
-    properties = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + property + ".csv")
+    properties = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + property + ".csv", ";")
 
     consumption_data_with_property = combine_consumption_property_data(consumption, properties)
     
     create_directory(DATA_ROOT_DIRECTORY +  property)
-    create_training_data(consumption_data_with_property)
-    create_test_data(consumption_data_with_property)
+    create_training_data(consumption_data_with_property, property)
+    create_test_data(consumption_data_with_property, property)
 
 # Reads the prepared data for each referenced property into a dictionary
 # e.g. datasets_dict['single'][0] returns the training data for the property single

@@ -14,10 +14,10 @@ import sklearn
 separate_data_to_train_test('11', 'single')
 
 def prepare_data():
-    x_train = datasets_dict[dataset_name][0]
-    y_train = datasets_dict[dataset_name][1]
-    x_test = datasets_dict[dataset_name][2]
-    y_test = datasets_dict[dataset_name][3]
+    x_train = datasets_dict[property_name][0]
+    y_train = datasets_dict[property_name][1]
+    x_test = datasets_dict[property_name][2]
+    y_test = datasets_dict[property_name][3]
 
     nb_classes = len(np.unique(np.concatenate((y_train, y_test), axis=0)))
 
@@ -88,7 +88,7 @@ xps = ['use_bottleneck', 'use_residual', 'nb_filters', 'depth',
 if sys.argv[1] == 'InceptionTime':
     # run nb_iter_ iterations of Inception on the whole TSC archive
     classifier_name = 'inception'
-    property_name = PROPERTY_NAMES[0]
+    #property_name = PROPERTY_NAMES[0]
     nb_iter_ = 5
 
     datasets_dict = read_all_properties(root_dir)
@@ -100,19 +100,19 @@ if sys.argv[1] == 'InceptionTime':
         if iter != 0:
             trr = '_itr_' + str(iter)
 
-        tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + property_name + trr + '/'
+        tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + trr + '/'
 
-        for dataset_name in utils.constants.dataset_names_for_archive[property_name]:
-            print('\t\t\tdataset_name: ', dataset_name)
+        for property_name in PROPERTY_NAMES:
+            print('\t\t\tproperty_name: ', property_name)
 
             x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
 
-            output_directory = tmp_output_directory + dataset_name + '/'
+            output_directory = tmp_output_directory + property_name + '/'
 
             temp_output_directory = create_directory(output_directory)
 
             if temp_output_directory is None:
-                print('Already_done', tmp_output_directory, dataset_name)
+                print('Already_done', tmp_output_directory, property_name)
                 continue
 
             fit_classifier()
@@ -125,16 +125,16 @@ if sys.argv[1] == 'InceptionTime':
     # run the ensembling of these iterations of Inception
     classifier_name = 'nne'
 
-    datasets_dict = read_all_properties(root_dir, property_name)
+    datasets_dict = read_all_properties(root_dir)
 
-    tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + property_name + '/'
+    tmp_output_directory = root_dir + '/results/' + classifier_name + '/'
 
-    for dataset_name in utils.constants.dataset_names_for_archive[property_name]:
-        print('\t\t\tdataset_name: ', dataset_name)
+    for property_name in PROPERTY_NAMES:
+        print('\t\t\tproperty_name: ', property_name)
 
         x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
 
-        output_directory = tmp_output_directory + dataset_name + '/'
+        output_directory = tmp_output_directory + property_name + '/'
 
         fit_classifier()
 
@@ -167,12 +167,12 @@ elif sys.argv[1] == 'InceptionTime_xp':
                     trr = '_itr_' + str(iter)
                 print('\t\titer', iter)
 
-                for dataset_name in utils.constants.dataset_names_for_archive[property_name]:
+                for property_name in utils.constants.dataset_names_for_archive[property_name]:
 
                     output_directory = root_dir + '/results/' + classifier_name + '/' + '/' + xp + '/' + '/' + str(
-                        xp_val) + '/' + property_name + trr + '/' + dataset_name + '/'
+                        xp_val) + '/' + property_name + trr + '/' + property_name + '/'
 
-                    print('\t\t\tdataset_name', dataset_name)
+                    print('\t\t\tdataset_name', property_name)
                     x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
 
                     # check if data is too big for this gpu
@@ -212,10 +212,10 @@ elif sys.argv[1] == 'InceptionTime_xp':
 
             clf_name = 'inception/' + xp + '/' + str(xp_val)
 
-            for dataset_name in utils.constants.dataset_names_for_archive[property_name]:
+            for property_name in utils.constants.dataset_names_for_archive[property_name]:
                 x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
 
-                output_directory = tmp_output_directory + dataset_name + '/'
+                output_directory = tmp_output_directory + property_name + '/'
 
                 from classifiers import nne
 
@@ -223,10 +223,6 @@ elif sys.argv[1] == 'InceptionTime_xp':
                                                 nb_classes, clf_name=clf_name)
 
                 classifier.fit(x_train, y_train, x_test, y_test, y_true)
-
-elif sys.argv[1] == 'run_length_xps':
-    # this is to generate the archive for the length experiments
-    run_length_xps(root_dir)
 
 elif sys.argv[1] == 'generate_results_csv':
     clfs = []
