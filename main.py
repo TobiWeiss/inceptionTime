@@ -11,9 +11,7 @@ import numpy as np
 import sys
 import sklearn
 
-separate_data_to_train_test('11', 'single')
-
-def prepare_data():
+def prepare_data(property_name):
     x_train = datasets_dict[property_name][0]
     y_train = datasets_dict[property_name][1]
     x_test = datasets_dict[property_name][2]
@@ -85,42 +83,47 @@ root_dir = ROOT_DIRECTORY
 xps = ['use_bottleneck', 'use_residual', 'nb_filters', 'depth',
        'kernel_size', 'batch_size']
 
+if 'PrepareData' in sys.argv:
+    for property_name in PROPERTY_NAMES:
+            print('Preparing data...')
+            separate_data_to_train_test('11', property_name)
+            print('... done preparing data')
+
 if sys.argv[1] == 'InceptionTime':
     # run nb_iter_ iterations of Inception on the whole TSC archive
     classifier_name = 'inception'
-    #property_name = PROPERTY_NAMES[0]
     nb_iter_ = 5
 
     datasets_dict = read_all_properties(root_dir)
 
-    for iter in range(nb_iter_):
-        print('\t\titer', iter)
-
-        trr = ''
-        if iter != 0:
-            trr = '_itr_' + str(iter)
-
-        tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + trr + '/'
-
-        for property_name in PROPERTY_NAMES:
+    for property_name in PROPERTY_NAMES:
             print('\t\t\tproperty_name: ', property_name)
+            
+            for iter in range(nb_iter_):
+                print('\t\titer', iter)
 
-            x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
+                trr = ''
+                if iter != 0:
+                    trr = '_itr_' + str(iter)
 
-            output_directory = tmp_output_directory + property_name + '/'
+                tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + trr + '/'
 
-            temp_output_directory = create_directory(output_directory)
+                x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data(property_name)
 
-            if temp_output_directory is None:
-                print('Already_done', tmp_output_directory, property_name)
-                continue
+                output_directory = tmp_output_directory + property_name + '/'
 
-            fit_classifier()
+                temp_output_directory = create_directory(output_directory)
 
-            print('\t\t\t\tDONE')
+                if temp_output_directory is None:
+                    print('Already_done', tmp_output_directory, property_name)
+                    continue
 
-            # the creation of this directory means
-            create_directory(output_directory + '/DONE')
+                fit_classifier()
+
+                print('\t\t\t\tDONE')
+
+                # the creation of this directory means
+                create_directory(output_directory + '/DONE')
 
     # run the ensembling of these iterations of Inception
     classifier_name = 'nne'
@@ -132,7 +135,7 @@ if sys.argv[1] == 'InceptionTime':
     for property_name in PROPERTY_NAMES:
         print('\t\t\tproperty_name: ', property_name)
 
-        x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
+        x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data(property_name)
 
         output_directory = tmp_output_directory + property_name + '/'
 

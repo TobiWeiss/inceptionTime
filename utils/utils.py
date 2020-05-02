@@ -81,7 +81,8 @@ def combine_consumption_property_data(consumption, properties):
     return consumption_data_with_property
 
 def create_training_data(consumption_data_with_property, property):
-      with open(DATA_ROOT_DIRECTORY + property + '/' + property + '_train', 'w+') as myfile:
+    create_directory(DATA_ROOT_DIRECTORY +  property)
+    with open(DATA_ROOT_DIRECTORY + property + '/' + property + '_train', 'w+') as myfile:
         wr = csv.writer(myfile)
         counter = 0
         amount_of_rows = len(consumption_data_with_property) * 0.8
@@ -91,14 +92,15 @@ def create_training_data(consumption_data_with_property, property):
                 counter = counter + 1
 
 def create_test_data(consumption_data_with_property, property):
-      with open(DATA_ROOT_DIRECTORY + property + '/' + property + '_test', 'w+') as myfile:
+    create_directory(DATA_ROOT_DIRECTORY +  property)
+    with open(DATA_ROOT_DIRECTORY + property + '/' + property + '_test', 'w+') as myfile:
         wr = csv.writer(myfile)
-        counter = len(consumption_data_with_property) * 0.8 + 1
+        counter = int(len(consumption_data_with_property) * 0.8) + 1
+        print(counter)
         amount_of_rows = len(consumption_data_with_property)
-        for row in consumption_data_with_property:
-            if counter < amount_of_rows:
-                wr.writerow(row)
-                counter = counter + 1
+        while counter < amount_of_rows:
+            wr.writerow(consumption_data_with_property[counter])
+            counter = counter + 1
 
 def separate_data_to_train_test(week, property):
     
@@ -107,7 +109,6 @@ def separate_data_to_train_test(week, property):
 
     consumption_data_with_property = combine_consumption_property_data(consumption, properties)
     
-    create_directory(DATA_ROOT_DIRECTORY +  property)
     create_training_data(consumption_data_with_property, property)
     create_test_data(consumption_data_with_property, property)
 
