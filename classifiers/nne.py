@@ -4,7 +4,6 @@ from utils.utils import calculate_metrics
 from utils.utils import create_directory
 from utils.utils import check_if_file_exits
 import gc
-from utils.constants import UNIVARIATE_ARCHIVE_NAMES  as ARCHIVE_NAMES
 import time
 
 
@@ -28,7 +27,7 @@ class Classifier_NNE:
         out_add = ''
         for cc in self.classifiers:
             out_add = out_add + cc + '-'
-        self.archive_name = ARCHIVE_NAMES[0]
+        self.archive_name = 'Ensemble'
         self.iterations_to_take = [i for i in range(nb_iterations)]
         for cc in self.iterations_to_take:
             out_add = out_add + str(cc) + '-'
