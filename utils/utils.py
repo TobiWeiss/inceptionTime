@@ -147,7 +147,7 @@ def calculate_metrics(y_true, y_pred, duration):
     res['accuracy'] = accuracy_score(y_true, y_pred)
     res['recall'] = recall_score(y_true, y_pred, average='macro')
     res['auc'] = roc_auc_score(y_true, y_pred, average='macro')
-    res['mcc'] = matthews_corrcoef(y_true, y_pred, average='macro')
+    res['mcc'] = matthews_corrcoef(y_true, y_pred)
     res['duration'] = duration
     return res
 
