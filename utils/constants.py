@@ -13,8 +13,8 @@ DATA_PROPERTIES_ROOT_DIRECTORY = 'data/ma_barth_data/Data_props_encoded/'
 #Root direcotry for results
 RESULTS_ROOT_DIRECTORY = 'results/'
 
+#Ratio desribing how much of the data is used for training and testing
+TRAINING_TEST_DATA_RATIO = 0.8
+
 #Reference Properties you wish to classify here
 PROPERTY_NAMES = ['single']
-
-
-dataset_names_for_archive = {'': PROPERTY_NAMES}

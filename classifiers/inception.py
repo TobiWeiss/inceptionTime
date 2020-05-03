@@ -15,7 +15,7 @@ from utils.utils import save_test_duration
 class Classifier_INCEPTION:
 
     def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True, batch_size=64,
-                 nb_filters=32, use_residual=True, use_bottleneck=True, depth=6, kernel_size=41, nb_epochs=700):
+                 nb_filters=32, use_residual=True, use_bottleneck=True, depth=6, kernel_size=41, nb_epochs=200):
 
         self.output_directory = output_directory
 
@@ -36,8 +36,9 @@ class Classifier_INCEPTION:
             self.verbose = verbose
             self.model.save_weights(self.output_directory + 'model_init.hdf5')
 
-    def _inception_module(self, input_tensor, stride=1, activation='linear'):
 
+    def _inception_module(self, input_tensor, stride=1, activation='linear'):
+        #Bottleneck is used for better performance since it reduces model complexity though it does not lead to higher accuracy
         if self.use_bottleneck and int(input_tensor.shape[-1]) > 1:
             input_inception = keras.layers.Conv1D(filters=self.bottleneck_size, kernel_size=1,
                                                   padding='same', activation=activation, use_bias=False)(input_tensor)
@@ -49,7 +50,7 @@ class Classifier_INCEPTION:
         kernel_size_s = [self.kernel_size // (2 ** i) for i in range(3)]
 
         conv_list = []
-
+        
         for i in range(len(kernel_size_s)):
             conv_list.append(keras.layers.Conv1D(filters=self.nb_filters, kernel_size=kernel_size_s[i],
                                                  strides=stride, padding='same', activation=activation, use_bias=False)(
@@ -122,6 +123,8 @@ class Classifier_INCEPTION:
         
         sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 
+        #batch_size defines the number of samples that will be propagated through the network, at least 16 if none is given
+        #x_train.shape[0] = länge der trainingsdaten
         if self.batch_size is None:
             mini_batch_size = int(min(x_train.shape[0] / 10, 16))
         else:
