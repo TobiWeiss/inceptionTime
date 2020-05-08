@@ -26,3 +26,4 @@ class Lime:
         return 'exp'
 
 Lime('test', 'test', 'test')
+Lime.get_explanation
