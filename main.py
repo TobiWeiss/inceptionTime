@@ -11,6 +11,9 @@ import numpy as np
 import sys
 import sklearn
 
+import lime
+import lime.lime_tabular
+
 def prepare_data(property_name):
     x_train = datasets_dict[property_name][0]
     y_train = datasets_dict[property_name][1]
@@ -46,6 +49,7 @@ def fit_classifier():
                                    output_directory)
 
     classifier.fit(x_train, y_train, x_test, y_test, y_true)
+
 
 
 def create_classifier(classifier_name, input_shape, nb_classes, output_directory,

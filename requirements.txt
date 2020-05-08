@@ -43,6 +43,7 @@ Keras-Preprocessing==1.0.5
 keyring==12.0.1
 keyrings.alt==3.0
 language-selector==0.1
+lime==0.1.1.33
 louis==2.6.4
 lxml==3.5.0
 Mako==1.0.3
