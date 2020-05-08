@@ -11,8 +11,7 @@ import numpy as np
 import sys
 import sklearn
 
-import lime
-import lime.lime_tabular
+import xai_lime
 
 def prepare_data(property_name):
     x_train = datasets_dict[property_name][0]
@@ -86,6 +85,9 @@ def get_xp_val(xp):
 root_dir = ROOT_DIRECTORY
 xps = ['use_bottleneck', 'use_residual', 'nb_filters', 'depth',
        'kernel_size', 'batch_size']
+
+if 'Explain' in sys.argv:
+    xai_lime.Lime('test', 'test', 'test')
 
 if 'PrepareData' in sys.argv:
     for property_name in PROPERTY_NAMES:
