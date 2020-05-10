@@ -1,5 +1,5 @@
 #Root directory
-ROOT_DIRECTORY = '/home/ma/inceptionTime/'
+ROOT_DIRECTORY = '/Users/tobiasweiss/ma/InceptionTime/'
 
 #Root directory for prepared data used for training
 DATA_ROOT_DIRECTORY = 'data/data_by_properties/'
