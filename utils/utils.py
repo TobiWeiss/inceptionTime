@@ -86,7 +86,7 @@ def create_training_data(consumption_data_with_property, property):
     with open(DATA_ROOT_DIRECTORY + property + '/' + property + '_train', 'w+') as myfile:
         wr = csv.writer(myfile)
         counter = 0
-        amount_of_rows = len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO - 2000
+        amount_of_rows = len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO
         for row in consumption_data_with_property:
             if counter < amount_of_rows:
                 wr.writerow(row)
