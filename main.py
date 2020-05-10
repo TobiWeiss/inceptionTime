@@ -11,8 +11,9 @@ import numpy as np
 import sys
 import sklearn
 
-import xai_lime
+
 import keras
+from xai import xai_shap, xai_lime
 
 def prepare_data(property_name):
     x_train = datasets_dict[property_name][0]
@@ -89,9 +90,11 @@ xps = ['use_bottleneck', 'use_residual', 'nb_filters', 'depth',
 
 if 'Explain' in sys.argv:
     model = keras.models.load_model('./results/inception/_itr_1/single/last_model.hdf5', compile=False)
-    explainer = xai_lime.Lime(property_name='single', model= model, class_names=['not_single', 'single'], num_features= 20)
-    explainer.create_explanations()
-
+    # explainer_lime = xai_lime.Lime(property_name='single', model= model, class_names=['not_single', 'single'], num_features= 20)
+    # explainer_lime.create_explanations()
+    explainer_shap = xai_shap.Shap(property_name='single', model= model, class_names=['not_single', 'single'], num_features= 20)
+    explainer_shap.create_explanations()
+    
 if 'PrepareData' in sys.argv:
     for property_name in PROPERTY_NAMES:
             print('Preparing data...')

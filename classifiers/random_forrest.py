@@ -10,6 +10,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import make_classification
 from sklearn import metrics
+import lime
+import lime.lime_tabular
 
 ### Feature Extraction
 
@@ -152,7 +154,7 @@ def get_average_max_consumption_part_of_day(daytime_start, daytime_end, weekday_
 def get_average_min_consumption_part_of_day(daytime_start, daytime_end, weekday_start, weekday_end):
     column = pd.DataFrame()
     for weekday in range (weekday_start, weekday_end):
-       column[weekday] = data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].max(axis=1)
+       column[weekday] = data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].min(axis=1)
     
     return column.mean(axis =1).tolist()
 
@@ -190,3 +192,8 @@ clf.fit(train_features,train_labels)
 
 y_pred=clf.predict(test_features)
 print("Accuracy:",metrics.accuracy_score(test_labels, y_pred))
+
+feature_names = list(train_features.columns)
+explainer = lime.lime_tabular.LimeTabularExplainer(np.array(train_features), feature_names=feature_names, class_names=['not single', 'single'], discretize_continuous=True)
+exp = explainer.explain_instance(np.array(test_features.iloc[2]), clf.predict_proba, num_features=10, top_labels=0)
+exp.save_to_file("../explanations/explanation_" +  'rf2' + ".html")
