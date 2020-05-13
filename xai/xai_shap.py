@@ -56,9 +56,9 @@ class Shap:
         datasets_dict = read_all_properties(root_dir)
         x_test = datasets_dict[self.property_name][2]
 
-        if len(x_test.shape) == 2:  # if univariate
+        #if len(x_test.shape) == 2:  # if univariate
             # add a dimension to make it multivariate with one dimension
-            x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
+            #x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
 
         return x_test
 
@@ -74,16 +74,16 @@ class Shap:
         test_data = self.get_explainees()
         feature_names = self.get_feature_names(train_data[0])
         background = train_data[np.random.choice(train_data.shape[0], 100, replace=False)]# we use the first 100 training examples as our background dataset to integrate over
-        explainer = shap.DeepExplainer(self.model,  train_data[:100])
-        
+        explainer = shap.KernelExplainer(self.model.predict,  train_data, link="logit")
+        shap_values = explainer.shap_values(test_data, nsamples=100)
         counter = 0
         create_directory(ROOT_DIRECTORY +  'explanations')
-        # for household in test_data:
-        #     if counter < 10:
-        #         label = self.get_label(household)
-        #         print(household.shape)
-        #         shap_values = explainer.shap_values(household, nsamples=1)
-        #         print(shap_values)
-        #         shap.force_plot(explainer.expected_value[0], shap_values[0][0,:], feature_names, link="logit")
-        #     counter = counter + 1
+        #for household in test_data:
+            # if counter < 10:
+             #    label = self.get_label(household)
+              #   print(household.shape)
+               #  shap_values = explainer.shap_values(np.array([household]))
+                # print(shap_values)
+                 #shap.force_plot(explainer.expected_value[0], shap_values[0][0,:], feature_names, link="logit")
+             #counter = counter + 1
 

@@ -13,7 +13,7 @@ import sklearn
 
 
 import keras
-from xai import xai_shap, xai_lime
+from xai import xai_shap
 
 def prepare_data(property_name):
     x_train = datasets_dict[property_name][0]
@@ -89,7 +89,7 @@ xps = ['use_bottleneck', 'use_residual', 'nb_filters', 'depth',
        'kernel_size', 'batch_size']
 
 if 'Explain' in sys.argv:
-    model = keras.models.load_model('./results/inception/_itr_1/single/last_model.hdf5', compile=False)
+    model = keras.models.load_model('./results/inception/_itr_1/single/last_model.hdf5', compile=True)
     # explainer_lime = xai_lime.Lime(property_name='single', model= model, class_names=['not_single', 'single'], num_features= 20)
     # explainer_lime.create_explanations()
     explainer_shap = xai_shap.Shap(property_name='single', model= model, class_names=['not_single', 'single'], num_features= 20)
