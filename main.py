@@ -4,7 +4,8 @@ from utils.constants import ROOT_DIRECTORY
 from utils.utils import read_all_properties
 from utils.utils import transform_labels
 from utils.utils import create_directory
-from utils.utils import generate_results_csv, separate_data_to_train_test
+from utils.utils import generate_results_csv
+from utils.data_preparation import separate_data_to_train_test
 
 import utils
 import numpy as np
@@ -96,10 +97,10 @@ if 'Explain' in sys.argv:
     explainer_shap.create_explanations()
     
 if 'PrepareData' in sys.argv:
+    print('Preparing data...')
     for property_name in PROPERTY_NAMES:
-            print('Preparing data...')
-            separate_data_to_train_test('11', property_name)
-            print('... done preparing data')
+            separate_data_to_train_test('40', property_name)
+    print('... done preparing data')
 
 if sys.argv[1] == 'InceptionTime':
     # run nb_iter_ iterations of Inception on the whole TSC archive

@@ -2,13 +2,13 @@
 ROOT_DIRECTORY = '/Users/tobiasweiss/ma/InceptionTime/'
 
 #Root directory for prepared data used for training
-DATA_ROOT_DIRECTORY = 'data/data_by_properties/'
+PREPARED_DATA_ROOT_DIRECTORY = 'data/prepared_data_by_properties/'
 
 #Root directory for data by weeks
-DATA_WEEKS_ROOT_DIRECORY = 'data/data_by_weeks/'
+DATA_WEEKS_ROOT_DIRECORY = 'data/data_cer/'
 
 #Root directory for properties by household_id
-DATA_PROPERTIES_ROOT_DIRECTORY = 'data/ma_barth_data/Data_props_encoded/'
+DATA_PROPERTIES_ROOT_DIRECTORY = 'data/data_cer/'
 
 #Root direcotry for results
 RESULTS_ROOT_DIRECTORY = 'results/'
@@ -17,4 +17,4 @@ RESULTS_ROOT_DIRECTORY = 'results/'
 TRAINING_TEST_DATA_RATIO = 0.8
 
 #Reference Properties you wish to classify here
-PROPERTY_NAMES = ['single']
+PROPERTY_NAMES = ['cooking', 'water_heating', 'space_heating', 'num_devices']
