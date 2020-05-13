@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib
 import random
+import re
 
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -15,7 +16,7 @@ import operator
 import utils
 
 from utils.constants import PROPERTY_NAMES
-from utils.constants import DATA_ROOT_DIRECTORY
+from utils.constants import PREPARED_DATA_ROOT_DIRECTORY
 from utils.constants import RESULTS_ROOT_DIRECTORY
 from utils.constants import DATA_WEEKS_ROOT_DIRECORY
 from utils.constants import DATA_PROPERTIES_ROOT_DIRECTORY
@@ -53,7 +54,7 @@ def readsits(filename, delimiter=','):
 
 #Reads a csv file into a list
 def read_csv_to_list(path, delimiter = ' '):
-    dataset = pd.read_csv(path, sep=delimiter, header= None)
+    dataset = pd.read_csv(path, sep=delimiter, header= None, engine='python')
     dataset = pd.DataFrame(dataset)
     dataset = dataset.values.tolist()
 
@@ -71,47 +72,7 @@ def create_directory(directory_path):
 
         return directory_path
 
-def combine_consumption_property_data(consumption, properties):
-    consumption_data_with_property = []
-    
-    for consumption_row in consumption:
-        for property_row in properties:
-            if int(consumption_row[0]) == int(property_row[0]) :
-                consumption_data_with_property.append([property_row[1]] + consumption_row[1:-1])
 
-    return consumption_data_with_property
-
-def create_training_data(consumption_data_with_property, property):
-    create_directory(DATA_ROOT_DIRECTORY +  property)
-    with open(DATA_ROOT_DIRECTORY + property + '/' + property + '_train', 'w+') as myfile:
-        wr = csv.writer(myfile)
-        counter = 0
-        amount_of_rows = len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO
-        for row in consumption_data_with_property:
-            if counter < amount_of_rows:
-                wr.writerow(row)
-                counter = counter + 1
-
-def create_test_data(consumption_data_with_property, property):
-    create_directory(DATA_ROOT_DIRECTORY +  property)
-    with open(DATA_ROOT_DIRECTORY + property + '/' + property + '_test', 'w+') as myfile:
-        wr = csv.writer(myfile)
-        counter = int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO) + 1
-        print(counter)
-        amount_of_rows = len(consumption_data_with_property)
-        while counter < amount_of_rows:
-            wr.writerow(consumption_data_with_property[counter])
-            counter = counter + 1
-
-def separate_data_to_train_test(week, property):
-    
-    consumption = read_csv_to_list(DATA_WEEKS_ROOT_DIRECORY + "DateienWoche" + week)
-    properties = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + property + ".csv", ";")
-
-    consumption_data_with_property = combine_consumption_property_data(consumption, properties)
-    
-    create_training_data(consumption_data_with_property, property)
-    create_test_data(consumption_data_with_property, property)
 
 # Reads the prepared data for each referenced property into a dictionary
 # e.g. datasets_dict['single'][0] returns the training data for the property single
@@ -122,7 +83,7 @@ def read_all_properties(root_dir):
 
     
     for property_name in PROPERTY_NAMES:
-        root_dir_dataset = root_dir + DATA_ROOT_DIRECTORY + property_name + '/'
+        root_dir_dataset = root_dir + PREPARED_DATA_ROOT_DIRECTORY + property_name + '/'
         file_name = root_dir_dataset + property_name
         x_train, y_train = readucr(file_name + '_train')
         x_test, y_test = readucr(file_name + '_test')
