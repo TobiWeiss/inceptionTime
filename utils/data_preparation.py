@@ -10,6 +10,8 @@ import re
 import pandas as pd
 import numpy as np
 from scipy.stats.stats import zscore
+from sklearn.utils import resample
+import random
 
 def combine_consumption_property_data(consumption, properties):
     consumption_data_with_property = []
@@ -52,7 +54,11 @@ def get_cooking_properties():
     survey_as_df = pd.DataFrame(survey)
     cooking_properties_as_list = list()
     for index in range(len(survey_as_df.iloc[1:, 0])):
-            cooking_properties_as_list.append([survey_as_df.iloc[index, 0], survey_as_df.iloc[index, question_indices[0]]])
+            if  survey_as_df.iloc[index, question_indices[0]] == '1':
+                class_val = 1
+            else: 
+                class_val = 0   
+            cooking_properties_as_list.append([survey_as_df.iloc[index, 0], class_val])
     cooking_properties_as_list.pop(0)
 
     return cooking_properties_as_list
@@ -62,24 +68,26 @@ def get_water_heating_properpties():
     survey.pop(0)
     water_heating_properties_as_list = list()
     for row in survey:
-        if row[50] == '1' or row[51] == '1':
+        if row[50] == '1':
+             water_heating_properties_as_list.append([row[0], 0])
+        elif row[51] == '1':
              water_heating_properties_as_list.append([row[0], 1])
         else:
-            water_heating_properties_as_list.append([row[0], 0])
+            water_heating_properties_as_list.append([row[0], 2])
 
     return water_heating_properties_as_list
 
 def get_space_heating_properties():
     survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
     survey.pop(0)
-    water_heating_properties_as_list = list()
+    space_heating_properties_as_list = list()
     for row in survey:
-        if row[41] == '1' or row[42] == '1':
-             water_heating_properties_as_list.append([row[0], 1])
+        if row[41] == '1'  or row[42] == '1':
+             space_heating_properties_as_list.append([row[0], 1])
         else:
-            water_heating_properties_as_list.append([row[0], 0])
+            space_heating_properties_as_list.append([row[0], 0])
 
-    return water_heating_properties_as_list
+    return space_heating_properties_as_list
 
     return
 
@@ -117,13 +125,47 @@ def get_devices_properties():
 
     return num_devices_as_list
 
+def handle_class_imbalance(consumption_data_with_property):
+    df = pd.DataFrame(consumption_data_with_property)
+    df_upsampled = pd.DataFrame()
+    num_classes = df.iloc[:, 0].value_counts()
+
+
+    for iteration in range(len(num_classes)-1):
+        if iteration > 0:
+            df = df_upsampled
+        num_classes = df.iloc[:, 0].value_counts()
+        minority_class_name = num_classes.idxmin()
+        majority_class_name = num_classes.idxmax()
+    
+        if len(num_classes) > 2:
+            df_between_min_maj = pd.DataFrame()
+            for class_name in num_classes.items():
+                if class_name[0] != minority_class_name and class_name[0] != majority_class_name:
+                    df_between_min_maj = pd.concat([df_between_min_maj, df[df.iloc[:, 0]==class_name[0]]])
+ 
+        df_minority = df[df.iloc[:, 0]==minority_class_name]
+        df_majority = df[df.iloc[:, 0]==majority_class_name]
+
+        df_minority_upsampled = resample(df_minority, 
+                                    replace=True,     
+                                    n_samples=len(df_majority.iloc[:, 0]) - 1,    
+                                    random_state=123) 
+
+        # Combine majority class with upsampled minority class
+        df_upsampled = pd.concat([df_majority, df_minority_upsampled])
+
+        if len(num_classes) > 2:
+            df_upsampled = pd.concat([df_upsampled, df_between_min_maj])
+
+    df_upsampled = df_upsampled.sample(frac=1)
+    return df_upsampled.values.tolist()
+
 def prepare_consumption_data(consumption_data):
     consumption_data_as_df = pd.DataFrame(consumption_data)
     consumption_data_as_df = consumption_data_as_df.dropna()
     consumption_data_as_df.iloc[:, 1:] = consumption_data_as_df.iloc[:, 1:].apply(zscore)
     consumption_data = consumption_data_as_df.values.tolist()
-    print(consumption_data)
-
 
     return consumption_data
 
@@ -142,6 +184,7 @@ def separate_data_to_train_test(week, property):
     properties = property_functions[property]
 
     consumption_data_with_property = combine_consumption_property_data(consumption_prepared, properties)
-    
-    create_training_data(consumption_data_with_property, property)
-    create_test_data(consumption_data_with_property, property)
+    consumption_data_with_property_upsampled = handle_class_imbalance(consumption_data_with_property)
+
+    create_training_data(consumption_data_with_property_upsampled, property)
+    create_test_data(consumption_data_with_property_upsampled, property)

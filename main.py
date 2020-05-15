@@ -7,6 +7,8 @@ from utils.utils import create_directory
 from utils.utils import generate_results_csv
 from utils.data_preparation import separate_data_to_train_test
 
+from classifiers.random_forrest import RandomForrest
+
 import utils
 import numpy as np
 import sys
@@ -101,6 +103,12 @@ if 'PrepareData' in sys.argv:
     for property_name in PROPERTY_NAMES:
             separate_data_to_train_test('40', property_name)
     print('... done preparing data')
+
+if 'RandomForrest' in sys.argv:
+    for property_name in PROPERTY_NAMES:
+        clf = RandomForrest(property_name)
+        clf.prepare_data()
+        clf.classify()
 
 if sys.argv[1] == 'InceptionTime':
     # run nb_iter_ iterations of Inception on the whole TSC archive
