@@ -188,8 +188,10 @@ class RandomForrest:
         print("MCC ( " + self.property_name + " ):",metrics.matthews_corrcoef(test_labels, y_pred))
         #print("Precision:",metrics.precision_score(test_labels, y_pred))
         #print("Recall:",metrics.recall_score(test_labels, y_pred))
-
-# feature_names = list(train_features.columns)
-# explainer = lime.lime_tabular.LimeTabularExplainer(np.array(train_features), feature_names=feature_names, class_names=['not single', 'single'], discretize_continuous=True)
-# exp = explainer.explain_instance(np.array(test_features.iloc[2]), clf.predict_proba, num_features=10, top_labels=0)
-# exp.save_to_file("../explanations/explanation_" +  'rf2' + ".html")
+        self.explain(train_features, test_features, clf)
+    
+    def explain(self, train_features, test_features, clf):
+        feature_names = list(train_features.columns)
+        explainer = lime.lime_tabular.LimeTabularExplainer(np.array(train_features), feature_names=feature_names, class_names=['not single', 'single'], discretize_continuous=True)
+        exp = explainer.explain_instance(np.array(test_features.iloc[2]), clf.predict_proba, num_features=10, top_labels=0)
+        exp.save_to_file("explanations/explanation_" +  'rf' + "_" + self.property_name + ".html")

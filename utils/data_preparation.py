@@ -28,7 +28,7 @@ def create_training_data(consumption_data_with_property, property):
     with open(PREPARED_DATA_ROOT_DIRECTORY + property + '/' + property + '_train', 'w+') as myfile:
         wr = csv.writer(myfile)
         counter = 0
-        amount_of_rows = len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO
+        amount_of_rows = len(consumption_data_with_property)
         for row in consumption_data_with_property:
             if counter < amount_of_rows:
                 wr.writerow(row)
@@ -38,7 +38,7 @@ def create_test_data(consumption_data_with_property, property):
     create_directory(PREPARED_DATA_ROOT_DIRECTORY +  property)
     with open(PREPARED_DATA_ROOT_DIRECTORY + property + '/' + property + '_test', 'w+') as myfile:
         wr = csv.writer(myfile)
-        counter = int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO) + 1
+        counter = len(consumption_data_with_property)
         amount_of_rows = len(consumption_data_with_property)
         while counter < amount_of_rows:
             wr.writerow(consumption_data_with_property[counter])
@@ -125,24 +125,27 @@ def get_devices_properties():
 
     return num_devices_as_list
 
+#handles imbalanced classes through upsampling
+#iterates over data until all classes are evenly distributed
 def handle_class_imbalance(consumption_data_with_property):
-    df = pd.DataFrame(consumption_data_with_property)
+    consumption_data_with_property_df = pd.DataFrame(consumption_data_with_property)
     df_upsampled = pd.DataFrame()
-    num_classes = df.iloc[:, 0].value_counts()
+    classes_counted = consumption_data_with_property_df.iloc[:, 0].value_counts()
 
-
-    for iteration in range(len(num_classes)-1):
+    for iteration in range(len(classes_counted)-1):
         if iteration > 0:
             df = df_upsampled
-        num_classes = df.iloc[:, 0].value_counts()
-        minority_class_name = num_classes.idxmin()
-        majority_class_name = num_classes.idxmax()
-    
-        if len(num_classes) > 2:
+        classes_counted = df.iloc[:, 0].value_counts()
+        minority_class_name = classes_counted.idxmin()
+        majority_class_name = classes_counted.idxmax()
+
+        #stores classes which represent neither the majority nor the minority within the observations
+        if len(classes_counted) > 2:
             df_between_min_maj = pd.DataFrame()
-            for class_name in num_classes.items():
-                if class_name[0] != minority_class_name and class_name[0] != majority_class_name:
-                    df_between_min_maj = pd.concat([df_between_min_maj, df[df.iloc[:, 0]==class_name[0]]])
+            for class_item in classes_counted.items():
+                class_name = class_item[0]
+                if class_name != minority_class_name and class_name != majority_class_name:
+                    df_between_min_maj = pd.concat([df_between_min_maj, df[df.iloc[:, 0]==class_name]])
  
         df_minority = df[df.iloc[:, 0]==minority_class_name]
         df_majority = df[df.iloc[:, 0]==majority_class_name]
@@ -155,7 +158,7 @@ def handle_class_imbalance(consumption_data_with_property):
         # Combine majority class with upsampled minority class
         df_upsampled = pd.concat([df_majority, df_minority_upsampled])
 
-        if len(num_classes) > 2:
+        if len(classes_counted) > 2:
             df_upsampled = pd.concat([df_upsampled, df_between_min_maj])
 
     df_upsampled = df_upsampled.sample(frac=1)
@@ -184,7 +187,8 @@ def separate_data_to_train_test(week, property):
     properties = property_functions[property]
 
     consumption_data_with_property = combine_consumption_property_data(consumption_prepared, properties)
-    consumption_data_with_property_upsampled = handle_class_imbalance(consumption_data_with_property)
+
+    consumption_data_with_property_upsampled = handle_class_imbalance(consumption_data_with_property[:2000])
 
     create_training_data(consumption_data_with_property_upsampled, property)
-    create_test_data(consumption_data_with_property_upsampled, property)
+    create_test_data(consumption_data_with_property[2001:], property)
