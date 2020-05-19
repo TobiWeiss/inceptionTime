@@ -5,7 +5,7 @@ from utils.utils import read_all_properties
 from utils.utils import transform_labels
 from utils.utils import create_directory
 from utils.utils import generate_results_csv
-from utils.data_preparation import separate_data_to_train_test
+from utils.data_preparation import prepare_data
 
 from classifiers.random_forrest import RandomForrest
 
@@ -18,7 +18,7 @@ import sklearn
 import keras
 from xai import xai_shap
 
-def prepare_data(property_name):
+def get_data(property_name):
     x_train = datasets_dict[property_name][0]
     y_train = datasets_dict[property_name][1]
     x_test = datasets_dict[property_name][2]
@@ -101,7 +101,7 @@ if 'Explain' in sys.argv:
 if 'PrepareData' in sys.argv:
     print('Preparing data...')
     for property_name in PROPERTY_NAMES:
-            separate_data_to_train_test('40', property_name)
+            prepare_data('40', property_name)
     print('... done preparing data')
 
 if 'RandomForrest' in sys.argv:
@@ -129,7 +129,7 @@ if sys.argv[1] == 'InceptionTime':
 
                 tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + trr + '/'
 
-                x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data(property_name)
+                x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data(property_name)
 
                 output_directory = tmp_output_directory + property_name + '/'
 
@@ -156,7 +156,7 @@ if sys.argv[1] == 'InceptionTime':
     for property_name in PROPERTY_NAMES:
         print('\t\t\tproperty_name: ', property_name)
 
-        x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data(property_name)
+        x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data(property_name)
 
         output_directory = tmp_output_directory + property_name + '/'
 
@@ -197,7 +197,7 @@ elif sys.argv[1] == 'InceptionTime_xp':
                         xp_val) + '/' + property_name + trr + '/' + property_name + '/'
 
                     print('\t\t\tdataset_name', property_name)
-                    x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
+                    x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data()
 
                     # check if data is too big for this gpu
                     size_data = x_train.shape[0] * x_train.shape[1]
@@ -237,7 +237,7 @@ elif sys.argv[1] == 'InceptionTime_xp':
             clf_name = 'inception/' + xp + '/' + str(xp_val)
 
             for property_name in utils.constants.dataset_names_for_archive[property_name]:
-                x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = prepare_data()
+                x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data()
 
                 output_directory = tmp_output_directory + property_name + '/'
 

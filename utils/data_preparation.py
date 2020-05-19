@@ -6,10 +6,12 @@ from utils.constants import RESULTS_ROOT_DIRECTORY
 from utils.constants import DATA_WEEKS_ROOT_DIRECORY
 from utils.constants import DATA_PROPERTIES_ROOT_DIRECTORY
 from utils.constants import TRAINING_TEST_DATA_RATIO
+from utils.constants import PROPERTIES_ENCODED_DIRECTORY
 import re
 import pandas as pd
 import numpy as np
 from scipy.stats.stats import zscore
+from scipy import stats
 from sklearn.utils import resample
 import random
 
@@ -23,26 +25,28 @@ def combine_consumption_property_data(consumption, properties):
 
     return consumption_data_with_property
 
-def create_training_data(consumption_data_with_property, property):
-    create_directory(PREPARED_DATA_ROOT_DIRECTORY +  property)
-    with open(PREPARED_DATA_ROOT_DIRECTORY + property + '/' + property + '_train', 'w+') as myfile:
-        wr = csv.writer(myfile)
-        counter = 0
-        amount_of_rows = len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO
-        for row in consumption_data_with_property:
-            if counter < amount_of_rows:
-                wr.writerow(row)
-                counter = counter + 1
+def store_indiviudal_properties(properties, property_name, class_one, class_two, class_three = "undefined"):
+    for row in properties:
+        if row[1] == 0:
+            row.append(class_one)
+        elif row[1] == 1:
+            row.append(class_two)
+        else:
+            row.append(class_three)
+    
+    create_directory(PROPERTIES_ENCODED_DIRECTORY)
+    with open(PROPERTIES_ENCODED_DIRECTORY + property_name + '.csv', 'w+') as file:
+        wr = csv.writer(file, delimiter= ' ')
+        for row in properties:
+            wr.writerow(row)
 
-def create_test_data(consumption_data_with_property, property):
+
+def save_as_csv(consumption_data_with_property, property, postfix):
     create_directory(PREPARED_DATA_ROOT_DIRECTORY +  property)
-    with open(PREPARED_DATA_ROOT_DIRECTORY + property + '/' + property + '_test', 'w+') as myfile:
-        wr = csv.writer(myfile)
-        counter = int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO) + 1
-        amount_of_rows = len(consumption_data_with_property)
-        while counter < amount_of_rows:
-            wr.writerow(consumption_data_with_property[counter])
-            counter = counter + 1
+    with open(PREPARED_DATA_ROOT_DIRECTORY + property + '/' + property + postfix, 'w+') as file:
+        wr = csv.writer(file)
+        for row in consumption_data_with_property:
+            wr.writerow(row)
 
 def get_cooking_properties():
     survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
@@ -61,6 +65,8 @@ def get_cooking_properties():
             cooking_properties_as_list.append([survey_as_df.iloc[index, 0], class_val])
     cooking_properties_as_list.pop(0)
 
+    store_indiviudal_properties(cooking_properties_as_list, 'cooking', 'Not Electric', 'Electric')
+
     return cooking_properties_as_list
 
 def get_water_heating_properpties():
@@ -74,6 +80,8 @@ def get_water_heating_properpties():
              water_heating_properties_as_list.append([row[0], 1])
         else:
             water_heating_properties_as_list.append([row[0], 2])
+    
+    store_indiviudal_properties( water_heating_properties_as_list, 'water_heating', 'Electric (Immersion)', 'Electric (Instantaneous heater)', 'Other')
 
     return water_heating_properties_as_list
 
@@ -86,10 +94,10 @@ def get_space_heating_properties():
              space_heating_properties_as_list.append([row[0], 1])
         else:
             space_heating_properties_as_list.append([row[0], 0])
+    
+    store_indiviudal_properties( space_heating_properties_as_list, 'space_heating', 'Electric', 'Not Electric')
 
     return space_heating_properties_as_list
-
-    return
 
 def get_devices_properties():
     survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
@@ -122,6 +130,8 @@ def get_devices_properties():
             num_devices = 2
         
         num_devices_as_list.append([survey_as_df.iloc[index, 0], num_devices])
+    
+    store_indiviudal_properties(num_devices_as_list, 'num_devices', 'Few', 'Moderate', 'Many')
 
     return num_devices_as_list
 
@@ -164,12 +174,15 @@ def handle_class_imbalance(consumption_data_with_property):
 def prepare_consumption_data(consumption_data):
     consumption_data_as_df = pd.DataFrame(consumption_data)
     consumption_data_as_df = consumption_data_as_df.dropna()
+    consumption_data_as_df = consumption_data_as_df.between(0, consumption_data_as_df.quantile(.95))
     consumption_data_as_df.iloc[:, 1:] = consumption_data_as_df.iloc[:, 1:].apply(zscore)
+    
+
     consumption_data = consumption_data_as_df.values.tolist()
 
     return consumption_data
 
-def separate_data_to_train_test(week, property):
+def prepare_data(week, property):
     
     consumption = read_csv_to_list(DATA_WEEKS_ROOT_DIRECORY + "DateienWoche" + week)
     consumption_prepared = prepare_consumption_data(consumption)
@@ -184,7 +197,10 @@ def separate_data_to_train_test(week, property):
     properties = property_functions[property]
 
     consumption_data_with_property = combine_consumption_property_data(consumption_prepared, properties)
-    consumption_data_with_property_upsampled = handle_class_imbalance(consumption_data_with_property)
+    training_data = consumption_data_with_property[:int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO)]
+    test_data = consumption_data_with_property[int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO):]
+    training_data_upsampled = handle_class_imbalance(training_data)
 
-    create_training_data(consumption_data_with_property_upsampled, property)
-    create_test_data(consumption_data_with_property_upsampled, property)
+    save_as_csv(training_data_upsampled, property, '_train')
+    save_as_csv(test_data, property, '_test')
+   

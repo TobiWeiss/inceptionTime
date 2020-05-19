@@ -7,6 +7,9 @@ PREPARED_DATA_ROOT_DIRECTORY = 'data/prepared_data_by_properties/'
 #Root directory for data by weeks
 DATA_WEEKS_ROOT_DIRECORY = 'data/data_cer/'
 
+#Root directory for encoded properties 
+PROPERTIES_ENCODED_DIRECTORY = 'data/properties_encoded/'
+
 #Root directory for properties by household_id
 DATA_PROPERTIES_ROOT_DIRECTORY = 'data/data_cer/'
 
@@ -18,3 +21,4 @@ TRAINING_TEST_DATA_RATIO = 0.8
 
 #Reference Properties you wish to classify here
 PROPERTY_NAMES = ['cooking', 'water_heating', 'space_heating', 'num_devices']
+#PROPERTY_NAMES = ['cooking']

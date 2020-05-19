@@ -4,12 +4,14 @@ import sys
 sys.path.insert(1, '../')
 import pandas as pd
 import numpy as np
+from numpy import inf
 
 from utils.constants import ROOT_DIRECTORY
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import make_classification
 from sklearn import metrics
+from sklearn import preprocessing
 import lime
 import lime.lime_tabular
 
@@ -30,6 +32,7 @@ SUNDAY = 6
 # The first day starts at index 1 since index 0 contains the class of the observation
 FIRST_DAY_START = 1
 FIRST_DAY_END = 48
+LAST_DAY_END = 336
 FIRST_MORNING_START = 13
 FIRST_MORNING_END = 20
 FIRST_NOON_START = 21
@@ -64,7 +67,9 @@ class RandomForrest:
 
         self.data_frame['c_week'] = get_average_consumption_part_of_day(FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
         self.data_frame['c_morning'] = get_average_consumption_part_of_day(FIRST_MORNING_START, FIRST_MORNING_END, MONDAY, SUNDAY)
+        print(np.amin(self.data_frame['c_morning']))
         self.data_frame['c_noon'] = get_average_consumption_part_of_day(FIRST_NOON_START, FIRST_NOON_END, MONDAY, SUNDAY)
+        print(np.amin(self.data_frame['c_noon']))
         self.data_frame['c_afternoon'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, SUNDAY)
         self.data_frame['c_evening'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, SUNDAY)
         self.data_frame['c_night'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, SUNDAY)
@@ -91,7 +96,8 @@ class RandomForrest:
             column = pd.DataFrame()
             for weekday in range (weekday_start, weekday_end):
                 column[weekday] = data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].max(axis=1)
-    
+                
+
             return column.max(axis =1).tolist()
 
         # Returns minimum consumption for a given time of the day and a given time of the week
@@ -99,13 +105,13 @@ class RandomForrest:
             column = pd.DataFrame()
             for weekday in range (weekday_start, weekday_end):
                 column[weekday] = data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].min(axis=1)
-    
+                
             return column.min(axis =1).tolist()
 
         # Returns variance of consumption for a given time of the day and a given time of the week
         def get_variance_consumption(weekday_start, weekday_end):
             column = pd.DataFrame()
-            consumption = data.iloc[:, 48 * weekday_start : 48 * weekday_end]
+            consumption = data.iloc[:, 48 * weekday_start + FIRST_DAY_START : 48 * weekday_end + FIRST_DAY_END]
     
             return consumption.var(axis =1).tolist()
 
@@ -125,14 +131,18 @@ class RandomForrest:
         temp_data_frame['c_var_weekend'] = get_variance_consumption(SATURDAY, SUNDAY)
         temp_data_frame['c_wd_day'] = get_average_consumption_part_of_day(FIRST_MORNING_START, FIRST_AFTERNOON_END, MONDAY, FRIDAY)
         temp_data_frame['c_we_day'] = get_average_consumption_part_of_day(FIRST_MORNING_START, FIRST_AFTERNOON_END, SATURDAY, SUNDAY)
+        
 
         self.data_frame['r_mean_max'] = get_ratio(self.data_frame['c_week'], temp_data_frame['c_max'])
         self.data_frame['r_min_mean'] = get_ratio(temp_data_frame['c_min'], self.data_frame['c_week'])
         self.data_frame['r_night_day'] = get_ratio(self.data_frame['c_night'], self.data_frame['c_week'])
-        self.data_frame['r_morning_noon'] = get_ratio(self.data_frame['c_night'], self.data_frame['c_week'])
-        self.data_frame['r_evening_noon'] = get_ratio(self.data_frame['c_morning'], self.data_frame['c_noon'])
+        self.data_frame['r_morning_noon'] = get_ratio(self.data_frame['c_morning'], self.data_frame['c_noon'])
+        self.data_frame['r_evening_noon'] = get_ratio(self.data_frame['c_evening'], self.data_frame['c_noon'])
+
         self.data_frame['r_var_wd_we'] = get_ratio(temp_data_frame['c_var_weekday'], temp_data_frame['c_var_weekend'])
         self.data_frame['r_min_wd_we'] = get_ratio(temp_data_frame['c_min_weekday'], temp_data_frame['c_min_weekend'])
+        
+       
         self.data_frame['r_max_wd_we'] = get_ratio(temp_data_frame['c_max_weekday'], temp_data_frame['c_max_weekend'])
         self.data_frame['r_evening_wd_we'] = get_ratio(self.data_frame['c_wd_evening'], self.data_frame['c_we_evening'])
         self.data_frame['r_night_wd_we'] = get_ratio(self.data_frame['c_wd_night'], self.data_frame['c_we_night'])
@@ -165,18 +175,20 @@ class RandomForrest:
 
         pd.concat([self.data_frame, temp_data_frame])
         self.data_frame['s_variance'] = get_variance_consumption(MONDAY, SUNDAY)
-        # self.data_frame['s_q1'] = data.iloc[:, 48 * MONDAY : 48 * SUNDAY].quantile(0.25)
-        # self.data_frame['s_q2'] = data.iloc[:, 48 * MONDAY : 48 * SUNDAY].quantile(0.5)
-        # self.data_frame['s_q2'] = data.iloc[:, 48 * MONDAY : 48 * SUNDAY].quantile(0.75)
+        self.data_frame['s_q1'] = data.iloc[:, 48 * MONDAY : 48 * SUNDAY].quantile(0.25, axis=1)
+        self.data_frame['s_q2'] = data.iloc[:, 48 * MONDAY : 48 * SUNDAY].quantile(0.5, axis=1)
+        self.data_frame['s_q2'] = data.iloc[:, 48 * MONDAY : 48 * SUNDAY].quantile(0.75, axis=1)
         self.data_frame['c_max_avg'] = get_average_max_consumption_part_of_day(FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
         self.data_frame['c_min_avg'] = get_average_min_consumption_part_of_day(FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
-
-
+        self.data_frame['s_cor'] = data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1)
+        print(data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1))
 # ### Random Forrest
     def classify(self):
-        #self.data_frame.drop(index=24, axis='columns')
+        self.data_frame.drop(index=24, axis='columns')
+        self.data_frame = np.nan_to_num(self.data_frame)
+        self.data_frame = np.where(self.data_frame >= np.finfo(np.float64).max, 0, self.data_frame)
+       
         train_features, test_features, train_labels, test_labels = train_test_split(self.data_frame, self.labels, test_size = 0.25, random_state = 42)
-
         #Create a Gaussian Classifier
         clf=RandomForestClassifier(n_estimators=100)
 
@@ -186,6 +198,7 @@ class RandomForrest:
         y_pred=clf.predict(test_features)
         print("Accuracy ( " + self.property_name + " ):",metrics.accuracy_score(test_labels, y_pred))
         print("MCC ( " + self.property_name + " ):",metrics.matthews_corrcoef(test_labels, y_pred))
+        #print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(preprocessing.binarize(test_labels.tolist()), y_pred, multi_class="ovr"))
         #print("Precision:",metrics.precision_score(test_labels, y_pred))
         #print("Recall:",metrics.recall_score(test_labels, y_pred))
 
