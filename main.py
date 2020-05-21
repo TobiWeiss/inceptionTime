@@ -109,6 +109,7 @@ if 'RandomForrest' in sys.argv:
         clf = RandomForrest(property_name)
         clf.prepare_data()
         clf.classify()
+        clf.explain()
 
 if sys.argv[1] == 'InceptionTime':
     # run nb_iter_ iterations of Inception on the whole TSC archive

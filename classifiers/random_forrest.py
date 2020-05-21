@@ -180,11 +180,10 @@ class RandomForrest:
         self.data_frame['s_q2'] = data.iloc[:, 48 * MONDAY : 48 * SUNDAY].quantile(0.75, axis=1)
         self.data_frame['c_max_avg'] = get_average_max_consumption_part_of_day(FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
         self.data_frame['c_min_avg'] = get_average_min_consumption_part_of_day(FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
-        self.data_frame['s_cor'] = data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1)
-        print(data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1))
+        # self.data_frame['s_cor'] = data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1)
+        # print(data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1))
 # ### Random Forrest
     def classify(self):
-        self.data_frame.drop(index=24, axis='columns')
         self.data_frame = np.nan_to_num(self.data_frame)
         self.data_frame = np.where(self.data_frame >= np.finfo(np.float64).max, 0, self.data_frame)
        
@@ -202,7 +201,18 @@ class RandomForrest:
         #print("Precision:",metrics.precision_score(test_labels, y_pred))
         #print("Recall:",metrics.recall_score(test_labels, y_pred))
 
-# feature_names = list(train_features.columns)
-# explainer = lime.lime_tabular.LimeTabularExplainer(np.array(train_features), feature_names=feature_names, class_names=['not single', 'single'], discretize_continuous=True)
-# exp = explainer.explain_instance(np.array(test_features.iloc[2]), clf.predict_proba, num_features=10, top_labels=0)
-# exp.save_to_file("../explanations/explanation_" +  'rf2' + ".html")
+    def explain(self):
+        train_features, test_features, train_labels, test_labels = train_test_split(self.data_frame, self.labels, test_size = 0.25, random_state = 42)
+        # print(train_features)
+        # feature_names = list(train_features.columns)
+         #Create a Gaussian Classifier
+        clf=RandomForestClassifier(n_estimators=100)
+
+        #Train the model using the training sets y_pred=clf.predict(X_test)
+        clf.fit(train_features,train_labels)
+        self.data_frame = pd.DataFrame()
+        self.prepare_data()
+        explainer = lime.lime_tabular.LimeTabularExplainer(np.array(train_features), feature_names=list(self.data_frame.columns), discretize_continuous=True)
+        exp = explainer.explain_instance(test_features[2], clf.predict_proba, num_features=10, top_labels=0)
+        exp.save_to_file("explanations/explanation_" +  'rf' + '_' + self.property_name + ".html")
+

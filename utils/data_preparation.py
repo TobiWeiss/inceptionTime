@@ -174,8 +174,8 @@ def handle_class_imbalance(consumption_data_with_property):
 def prepare_consumption_data(consumption_data):
     consumption_data_as_df = pd.DataFrame(consumption_data)
     consumption_data_as_df = consumption_data_as_df.dropna()
-    consumption_data_as_df = consumption_data_as_df.between(0, consumption_data_as_df.quantile(.95))
-    consumption_data_as_df.iloc[:, 1:] = consumption_data_as_df.iloc[:, 1:].apply(zscore)
+    #consumption_data_as_df = consumption_data_as_df.between(0, consumption_data_as_df.quantile(.95))
+    #consumption_data_as_df.iloc[:, 1:] = consumption_data_as_df.iloc[:, 1:].apply(zscore)
     
 
     consumption_data = consumption_data_as_df.values.tolist()
