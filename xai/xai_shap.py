@@ -2,6 +2,7 @@ import sklearn
 import shap
 from sklearn.model_selection import train_test_split
 import keras
+from keras import backend as K
 import sys
 sys.path.insert(1, '../')
 from utils.utils import create_directory, read_all_properties
@@ -9,14 +10,15 @@ from utils.constants import ROOT_DIRECTORY
 import numpy as np
 
 class Shap:
-    def __init__(self, property_name, model, class_names, num_features):
+    def __init__(self, property_name, class_names, num_features):
         self.property_name = str(property_name)
-        self.model = model
         self.class_names = class_names
         self.num_features = num_features
         
     def get_model(self):
-        model = keras.models.load_model('./results/inception/_itr_1/single/last_model.hdf5', compile=False)
+        model = keras.models.load_model('./results/inception/' + self.property_name + '/best_model.hdf5', compile=False)
+
+        return model
     
     def get_feature_names(self, explainee):
         feature_names = list()
@@ -56,9 +58,9 @@ class Shap:
         datasets_dict = read_all_properties(root_dir)
         x_test = datasets_dict[self.property_name][2]
 
-        #if len(x_test.shape) == 2:  # if univariate
-            # add a dimension to make it multivariate with one dimension
-            #x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
+        if len(x_test.shape) == 2:  # if univariate
+            #add a dimension to make it multivariate with one dimension
+            x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
 
         return x_test
 
@@ -72,12 +74,21 @@ class Shap:
     def create_explanations(self):
         train_data = self.get_training_data()
         test_data = self.get_explainees()
+        model = self.get_model()
         feature_names = self.get_feature_names(train_data[0])
-        background = train_data[np.random.choice(train_data.shape[0], 100, replace=False)]# we use the first 100 training examples as our background dataset to integrate over
-        explainer = shap.KernelExplainer(self.model.predict,  train_data, link="logit")
-        shap_values = explainer.shap_values(test_data, nsamples=100)
-        counter = 0
-        create_directory(ROOT_DIRECTORY +  'explanations')
+        # background = train_data[np.random.choice(train_data.shape[0], 100, replace=False)]# we use the first 100 training examples as our background dataset to integrate over
+        # explainer = shap.KernelExplainer(self.model.predict,  train_data, link="logit")
+        # shap_values = explainer.shap_values(test_data, nsamples=100)
+        # counter = 0
+        # create_directory(ROOT_DIRECTORY +  'explanations')
+        sess = K.get_session()
+        explainer = shap.DeepExplainer(model, train_data[:10], sess)
+        print(explainer)
+        y_pred = model.predict(test_data[:1])
+        print(y_pred)
+        shap_values = explainer.shap_values(test_data[:1])
+        print('Actual Category: %s, Predict Category: %s' % (test_data[:1], y_pred[0]))
+        shap.force_plot(explainer.expected_value[0], shap_values[0][0])
         #for household in test_data:
             # if counter < 10:
              #    label = self.get_label(household)
