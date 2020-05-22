@@ -65,7 +65,7 @@ class Shap:
         return x_test
 
     def get_label(self, household):
-        prediction = self.model.predict(np.array([household]))
+        prediction = self.get_model().predict(np.array([household]))
         if prediction[0,0] > prediction[0,1]:
             return 0
         else:
@@ -82,19 +82,25 @@ class Shap:
         # counter = 0
         # create_directory(ROOT_DIRECTORY +  'explanations')
         sess = K.get_session()
-        explainer = shap.DeepExplainer(model, train_data[:10], sess)
-        print(explainer)
-        y_pred = model.predict(test_data[:1])
+        explainer = shap.DeepExplainer(model, train_data[:100], sess)
+        y_pred = model.predict(np.array([test_data[3]]))
         print(y_pred)
-        shap_values = explainer.shap_values(test_data[:1])
-        print('Actual Category: %s, Predict Category: %s' % (test_data[:1], y_pred[0]))
-        shap.force_plot(explainer.expected_value[0], shap_values[0][0])
-        #for household in test_data:
-            # if counter < 10:
-             #    label = self.get_label(household)
-              #   print(household.shape)
-               #  shap_values = explainer.shap_values(np.array([household]))
-                # print(shap_values)
-                 #shap.force_plot(explainer.expected_value[0], shap_values[0][0,:], feature_names, link="logit")
-             #counter = counter + 1
+        shap_values = explainer.shap_values(np.array([test_data[2]]))
+        # print('exp', explainer.expected_value)
+        # print('input1', explainer.expected_value[0])
+        # print('input2', shap_values[0][0])
+        # print('input2a', shap_values[1])
+        #shap.force_plot(explainer.expected_value[0], shap_values[0][0], show=False).savefig('demo.jpg')
+        shap.multioutput_decision_plot
+        shap.save_html('test.html', shap.force_plot(explainer.expected_value[1], shap_values[1][0], show=False, features=test_data[3]) )
+        #shap.save_html('test.html', shap.summary_plot(shap_values[0][0], test_data[:1]) )
+        counter = 0
+        for household in test_data:
+            if counter < 10:
+                label = self.get_label(household)
+                print(household.shape)
+                shap_values = explainer.shap_values(np.array([household]))
+                print(shap_values)
+                shap.save_html('explanation_shap_' + str(counter) +  '.html', shap.force_plot(explainer.expected_value[self.get_label(household)], shap_values[self.get_label(household)][0], show=False, features=household))
+            counter = counter + 1
 
