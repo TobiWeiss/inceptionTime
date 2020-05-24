@@ -198,8 +198,8 @@ class RandomForrest:
         print("Accuracy ( " + self.property_name + " ):",metrics.accuracy_score(test_labels, y_pred))
         print("MCC ( " + self.property_name + " ):",metrics.matthews_corrcoef(test_labels, y_pred))
         #print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(preprocessing.binarize(test_labels.tolist()), y_pred, multi_class="ovr"))
-        #print("Precision:",metrics.precision_score(test_labels, y_pred))
-        #print("Recall:",metrics.recall_score(test_labels, y_pred))
+        print("Precision:",metrics.precision_score(test_labels, y_pred, average='weighted'))
+        print("Recall:",metrics.recall_score(test_labels, y_pred, average='weighted'))
 
     def explain(self):
         train_features, test_features, train_labels, test_labels = train_test_split(self.data_frame, self.labels, test_size = 0.25, random_state = 42)
