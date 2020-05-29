@@ -93,23 +93,34 @@ xps = ['use_bottleneck', 'use_residual', 'nb_filters', 'depth',
 
 if 'Explain' in sys.argv:
     #model = keras.models.load_model('./results/inception/_itr_1/single/last_model.hdf5', compile=True)
-    # explainer_lime = xai_lime.Lime(property_name='cooking', class_names=['Not Electric', 'Electric'], num_features= 20)
-    # explainer_lime.create_explanations()
+    explainer_lime = xai_lime.Lime(property_name='cooking', class_names=['Not Electric', 'Electric'], num_features= 20)
+    explainer_lime.create_explanations()
     explainer_shap = xai_shap.Shap(property_name='cooking', class_names=['Not Electric', 'Electric'], num_features= 20)
+    explainer_shap.create_explanations()
+    explainer_lime = xai_lime.Lime(property_name='space_heating', class_names=['Not Electric', 'Electric'], num_features= 20)
+    explainer_lime.create_explanations()
+    explainer_shap = xai_shap.Shap(property_name='space_heating', class_names=['Not Electric', 'Electric'], num_features= 20)
+    explainer_shap.create_explanations()
+    explainer_lime = xai_lime.Lime(property_name='water_heating', class_names=['Electric (Immersion)', 'Electric (Instantaneous heater)', 'Other'], num_features= 20)
+    explainer_lime.create_explanations()
+    explainer_shap = xai_shap.Shap(property_name='water_heating', class_names=['Electric (Immersion)', 'Electric (Instantaneous heater)', 'Other'], num_features= 20)
+    explainer_shap.create_explanations()
+    explainer_lime = xai_lime.Lime(property_name='num_devices', class_names=['Few', 'Moderate', 'Many'], num_features= 20)
+    explainer_lime.create_explanations()
+    explainer_shap = xai_shap.Shap(property_name='num_devices', class_names=['Few', 'Moderate', 'Many'], num_features= 20)
     explainer_shap.create_explanations()
     
 if 'PrepareData' in sys.argv:
     print('Preparing data...')
     for property_name in PROPERTY_NAMES:
-            prepare_data('40', property_name)
+            prepare_data(property_name)
     print('... done preparing data')
 
 if 'RandomForrest' in sys.argv:
     for property_name in PROPERTY_NAMES:
         clf = RandomForrest(property_name)
-        clf.prepare_data()
         clf.classify()
-        clf.explain()
+
 
 if sys.argv[1] == 'InceptionTime':
     # run nb_iter_ iterations of Inception on the whole TSC archive
@@ -165,10 +176,10 @@ if sys.argv[1] == 'InceptionTime':
 
         print('\t\t\t\tDONE')
 
-elif sys.argv[1] == 'InceptionTime_xp':
+elif sys.argv[1] == 'InceptionTime_HPT':
     # this part is for running inception with the different hyperparameters
     # listed in the paper, on the whole TSC archive
-    property_name = 'TSC'
+    # property_name = 'TSC'
     classifier_name = 'inception'
     max_iterations = 5
 

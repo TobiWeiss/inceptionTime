@@ -16,7 +16,7 @@ class Shap:
         self.num_features = num_features
         
     def get_model(self):
-        model = keras.models.load_model('./results/inception/' + self.property_name + '/best_model.hdf5', compile=False)
+        model = keras.models.load_model('./results2/inception/' + self.property_name + '/best_model.hdf5', compile=False)
 
         return model
     
@@ -83,8 +83,8 @@ class Shap:
         # create_directory(ROOT_DIRECTORY +  'explanations')
         sess = K.get_session()
         explainer = shap.DeepExplainer(model, train_data[:100], sess)
-        y_pred = model.predict(np.array([test_data[3]]))
-        print(y_pred)
+        y_pred = model.predict(np.array([test_data[2]]))
+        #print(y_pred)
         shap_values = explainer.shap_values(np.array([test_data[2]]))
         # print('exp', explainer.expected_value)
         # print('input1', explainer.expected_value[0])
@@ -92,15 +92,16 @@ class Shap:
         # print('input2a', shap_values[1])
         #shap.force_plot(explainer.expected_value[0], shap_values[0][0], show=False).savefig('demo.jpg')
         shap.multioutput_decision_plot
-        shap.save_html('test.html', shap.force_plot(explainer.expected_value[1], shap_values[1][0], show=False, features=test_data[3]) )
+        #shap.save_html('test.html', shap.force_plot(explainer.expected_value[1], shap_values[1][0], show=False, features=test_data[3]) )
         #shap.save_html('test.html', shap.summary_plot(shap_values[0][0], test_data[:1]) )
         counter = 0
+        create_directory(ROOT_DIRECTORY +  'explanations_shap')
         for household in test_data:
-            if counter < 10:
+            if counter == 2:
                 label = self.get_label(household)
-                print(household.shape)
+                print(model.predict(np.array([household])))
+                print(label)
                 shap_values = explainer.shap_values(np.array([household]))
-                print(shap_values)
-                shap.save_html('explanation_shap_' + str(counter) +  '.html', shap.force_plot(explainer.expected_value[self.get_label(household)], shap_values[self.get_label(household)][0], show=False, features=household))
+                shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + str(counter) +  '.html', shap.force_plot(explainer.expected_value[self.get_label(household)], shap_values[self.get_label(household)][0], show=False, features=household))
             counter = counter + 1
 

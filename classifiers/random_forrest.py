@@ -50,9 +50,13 @@ class RandomForrest:
         self.labels = list()
         self.data_frame = pd.DataFrame()
     
-    def prepare_data(self):
+    def prepare_data(self, prepare_training_data):
         ## Reading the data
-        data = pd.read_csv(ROOT_DIRECTORY + "data/prepared_data_by_properties/" + self.property_name + '/' + self.property_name + '_train', delimiter=',')
+        if prepare_training_data:
+            data = pd.read_csv(ROOT_DIRECTORY + "data/prepared_data_by_properties/" + self.property_name + '/' + self.property_name + '_train', delimiter=',')
+        else:
+            data = pd.read_csv(ROOT_DIRECTORY + "data/prepared_data_by_properties/" + self.property_name + '/' + self.property_name + '_test', delimiter=',')
+            self.data_frame = pd.DataFrame()        
         self.labels = data.iloc[:, 0]
 
         ## Feature Category: Consumption
@@ -67,9 +71,7 @@ class RandomForrest:
 
         self.data_frame['c_week'] = get_average_consumption_part_of_day(FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
         self.data_frame['c_morning'] = get_average_consumption_part_of_day(FIRST_MORNING_START, FIRST_MORNING_END, MONDAY, SUNDAY)
-        print(np.amin(self.data_frame['c_morning']))
         self.data_frame['c_noon'] = get_average_consumption_part_of_day(FIRST_NOON_START, FIRST_NOON_END, MONDAY, SUNDAY)
-        print(np.amin(self.data_frame['c_noon']))
         self.data_frame['c_afternoon'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, SUNDAY)
         self.data_frame['c_evening'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, SUNDAY)
         self.data_frame['c_night'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, SUNDAY)
@@ -182,24 +184,32 @@ class RandomForrest:
         self.data_frame['c_min_avg'] = get_average_min_consumption_part_of_day(FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
         # self.data_frame['s_cor'] = data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1)
         # print(data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1))
-# ### Random Forrest
-    def classify(self):
+
         self.data_frame = np.nan_to_num(self.data_frame)
         self.data_frame = np.where(self.data_frame >= np.finfo(np.float64).max, 0, self.data_frame)
+
+# ### Random Forrest
+    def classify(self):
        
-        train_features, test_features, train_labels, test_labels = train_test_split(self.data_frame, self.labels, test_size = 0.25, random_state = 42)
+        self.prepare_data(True)
+        train_features, test_features, train_labels, test_labels = train_test_split(self.data_frame, self.labels, test_size = 0.1, random_state = 42)
+        self.prepare_data(False)
+        train_features2, test_features2, train_labels2, test_labels2 = train_test_split(self.data_frame, self.labels, test_size = 0.99, random_state = 42)
+       
         #Create a Gaussian Classifier
         clf=RandomForestClassifier(n_estimators=100)
 
         #Train the model using the training sets y_pred=clf.predict(X_test)
         clf.fit(train_features,train_labels)
 
-        y_pred=clf.predict(test_features)
-        print("Accuracy ( " + self.property_name + " ):",metrics.accuracy_score(test_labels, y_pred))
-        print("MCC ( " + self.property_name + " ):",metrics.matthews_corrcoef(test_labels, y_pred))
+        y_pred=clf.predict(test_features2)
+        print("Accuracy ( " + self.property_name + " ):",metrics.accuracy_score(test_labels2, y_pred))
+        print("MCC ( " + self.property_name + " ):",metrics.matthews_corrcoef(test_labels2, y_pred))
         #print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(preprocessing.binarize(test_labels.tolist()), y_pred, multi_class="ovr"))
-        print("Precision:",metrics.precision_score(test_labels, y_pred, average='weighted'))
-        print("Recall:",metrics.recall_score(test_labels, y_pred, average='weighted'))
+        print("Precision:",metrics.precision_score(test_labels2, y_pred, average='weighted'))
+        print("Recall:",metrics.recall_score(test_labels2, y_pred, average='weighted'))
+        print(clf.predict(test_features2[3].reshape(1, -1)))
+        print(test_labels2[3])
 
     def explain(self):
         train_features, test_features, train_labels, test_labels = train_test_split(self.data_frame, self.labels, test_size = 0.25, random_state = 42)

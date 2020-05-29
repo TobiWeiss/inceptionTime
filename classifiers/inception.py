@@ -7,6 +7,7 @@ import tensorflow as tf
 from utils.utils import save_logs
 from utils.utils import calculate_metrics
 from utils.utils import save_test_duration
+from keras.callbacks import EarlyStopping
 
 
 
@@ -107,8 +108,10 @@ class Classifier_INCEPTION:
 
         model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
                                                            save_best_only=True)
+                                                           
+        early_stopping = EarlyStopping(monitor='val_loss', patience=20)
 
-        self.callbacks = [reduce_lr, model_checkpoint]
+        self.callbacks = [early_stopping ,reduce_lr, model_checkpoint]
 
         return model
 

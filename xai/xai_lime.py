@@ -19,7 +19,7 @@ class Lime:
         self.num_features = num_features
         
     def get_model(self):
-        model = keras.models.load_model('./results/inception/' + self.property_name + '/best_model.hdf5', compile=False)
+        model = keras.models.load_model('./results2/inception/' + self.property_name + '/best_model.hdf5', compile=False)
 
         return model
     
@@ -81,12 +81,12 @@ class Lime:
         feature_names = self.get_feature_names(train_data[0])
         explainer = lime.lime_tabular.RecurrentTabularExplainer(train_data, class_names=self.class_names, feature_names=feature_names, mode='classification')
         counter = 0
-        create_directory(ROOT_DIRECTORY +  'explanations')
+        create_directory(ROOT_DIRECTORY +  'explanations_lime')
         for household in test_data:
-            if counter < 10:
+            if counter == 2:
                 label = self.get_label(household, model)
                 exp = explainer.explain_instance(np.array([household]), model.predict, num_features=self.num_features, top_labels=1, labels=label)
-                exp.save_to_file("explanations/explanation_" +  str(counter) + ".html")
+                exp.save_to_file("explanations_lime/explanation_" + self.property_name + '_' +  str(counter) + ".html")
                 print(model.predict(np.array([household])))
                 print(exp.as_list(label=label))
             counter = counter + 1
