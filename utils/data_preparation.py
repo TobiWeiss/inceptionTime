@@ -164,7 +164,7 @@ def handle_class_imbalance(consumption_data_with_property):
                                     random_state=123)
 
         # Combine majority class with upsampled minority class
-        df_downsampled = pd.concat([df_majority, df_minority_downsampled])
+        df_downsampled = pd.concat([df_minority, df_minority_downsampled])
 
         if len(num_classes) > 2:
             print(len(df_downsampled))
