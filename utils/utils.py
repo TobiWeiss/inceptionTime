@@ -21,6 +21,7 @@ from utils.constants import RESULTS_ROOT_DIRECTORY
 from utils.constants import DATA_WEEKS_ROOT_DIRECORY
 from utils.constants import DATA_PROPERTIES_ROOT_DIRECTORY
 from utils.constants import TRAINING_TEST_DATA_RATIO
+from utils.constants import ROOT_DIRECTORY
 
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_score
@@ -32,6 +33,7 @@ from pathlib import Path
 from numpy.lib.npyio import loadtxt, savetxt
 from numpy import genfromtxt
 import csv
+import shutil
 
 def check_if_file_exits(file_name):
     return os.path.exists(file_name)
@@ -72,6 +74,14 @@ def create_directory(directory_path):
 
         return directory_path
 
+def clear_directory(directory_path):
+    if not os.path.exists(directory_path):
+        return
+    else:
+        shutil.rmtree(directory_path)
+
+
+
 
 
 # Reads the prepared data for each referenced property into a dictionary
@@ -105,13 +115,16 @@ def read_all_properties(root_dir):
 
 def calculate_metrics(y_true, y_pred, duration):
     res = pd.DataFrame(data=np.zeros((1, 4), dtype=np.float), index=[0],
-                       columns=['precision', 'accuracy', 'recall', 'duration'])
+                       columns=['precision', 'accuracy', 'recall', 'mcc', 'auc' 'duration'])
     res['precision'] = precision_score(y_true, y_pred, average='macro')
     res['accuracy'] = accuracy_score(y_true, y_pred)
     res['recall'] = recall_score(y_true, y_pred, average='macro')
-    res['auc'] = roc_auc_score(y_true, y_pred, average='macro')
+    res['auc'] = roc_auc_score(y_true, y_pred, average='macro', multi_class="ovr")
+    print(res['auc'])
+    #res['auc'] = print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(preprocessing.binarize(np.array(test_labels2).reshape(-1,1)), y_pred, multi_class="ovr"))
     res['mcc'] = matthews_corrcoef(y_true, y_pred)
     res['duration'] = duration
+    print(res)
     return res
 
 
@@ -147,7 +160,7 @@ def generate_results_csv(output_file_name, root_dir, clfs):
                        columns=['property_name', 'iteration',
                                 'precision', 'accuracy', 'recall', 'auc', 'mcc', 'duration'])
 
-    properties_dict = read_all_properties()
+    properties_dict = read_all_properties(ROOT_DIRECTORY)
     for classifier_name in clfs:
         durr = 0.0
 
@@ -163,7 +176,7 @@ def generate_results_csv(output_file_name, root_dir, clfs):
 
     res.to_csv(root_dir + output_file_name, index=False)
 
-    res = res.loc[res['classifier_name'].isin(clfs)]
+    #res = res.loc[res['classifier_name'].isin(clfs)]
 
     return res
 

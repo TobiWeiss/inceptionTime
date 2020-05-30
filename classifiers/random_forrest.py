@@ -205,7 +205,7 @@ class RandomForrest:
         y_pred=clf.predict(test_features2)
         print("Accuracy ( " + self.property_name + " ):",metrics.accuracy_score(test_labels2, y_pred))
         print("MCC ( " + self.property_name + " ):",metrics.matthews_corrcoef(test_labels2, y_pred))
-        #print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(preprocessing.binarize(test_labels.tolist()), y_pred, multi_class="ovr"))
+        print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(preprocessing.binarize(np.array(test_labels2).reshape(-1,1)), y_pred, multi_class="ovr"))
         print("Precision:",metrics.precision_score(test_labels2, y_pred, average='weighted'))
         print("Recall:",metrics.recall_score(test_labels2, y_pred, average='weighted'))
         print(clf.predict(test_features2[3].reshape(1, -1)))

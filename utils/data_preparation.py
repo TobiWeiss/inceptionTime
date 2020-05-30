@@ -157,18 +157,15 @@ def handle_class_imbalance(consumption_data_with_property):
 
         df_minority = df[df.iloc[:, 0]==minority_class_name]
         df_majority = df[df.iloc[:, 0]==majority_class_name]
-
-        df_minority_downsampled = resample(df_majority,
-                                    replace=True,
-                                    n_samples=len(df_minority.iloc[:, 0]) - 1,
-                                    random_state=123)
+        
+        #shuffle rows in data_frame of majority for randomization, then downsampling
+        df_majority = df_majority.sample(frac=1)
+        df_majority_downsampled = df_majority.head(len(df_minority) - 1)
 
         # Combine majority class with upsampled minority class
-        df_downsampled = pd.concat([df_minority, df_minority_downsampled])
+        df_downsampled = pd.concat([df_minority, df_majority_downsampled])
 
         if len(num_classes) > 2:
-            print(len(df_downsampled))
-            print(len(df_between_min_maj))
             df_downsampled = pd.concat([df_downsampled, df_between_min_maj])
 
     df_downsampled = df_downsampled.sample(frac=1)
@@ -191,6 +188,7 @@ def prepare_data(property):
         consumption_of_week = read_csv_to_list(DATA_WEEKS_ROOT_DIRECORY + "DateienWoche" + str(week))
         for household_consumption in consumption_of_week:
             consumption.append(household_consumption)
+   
 
     consumption_prepared = prepare_consumption_data(consumption)
 
@@ -207,7 +205,6 @@ def prepare_data(property):
     training_data = consumption_data_with_property[:int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO)]
     test_data = consumption_data_with_property[int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO):]
     training_data_downsampled = handle_class_imbalance(training_data)
-    print(len(training_data_downsampled))
 
     save_as_csv(training_data_downsampled, property, '_train')
     save_as_csv(test_data, property, '_test')

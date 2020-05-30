@@ -5,6 +5,7 @@ from utils.utils import read_all_properties
 from utils.utils import transform_labels
 from utils.utils import create_directory
 from utils.utils import generate_results_csv
+from utils.utils  import clear_directory
 from utils.data_preparation import prepare_data
 
 from classifiers.random_forrest import RandomForrest
@@ -13,7 +14,7 @@ import utils
 import numpy as np
 import sys
 import sklearn
-
+import time
 
 import keras
 from xai import xai_lime, xai_shap
@@ -113,7 +114,11 @@ if 'Explain' in sys.argv:
 if 'PrepareData' in sys.argv:
     print('Preparing data...')
     for property_name in PROPERTY_NAMES:
+            start_time = time.time()
+            print('Preparing ' + property_name)
             prepare_data(property_name)
+            print('Done preparing ' + property_name)
+            print("duration %s seconds" % (time.time() - start_time))
     print('... done preparing data')
 
 if 'RandomForrest' in sys.argv:
