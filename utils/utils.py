@@ -34,6 +34,7 @@ from numpy.lib.npyio import loadtxt, savetxt
 from numpy import genfromtxt
 import csv
 import shutil
+from sklearn import preprocessing
 
 def check_if_file_exits(file_name):
     return os.path.exists(file_name)
@@ -115,13 +116,12 @@ def read_all_properties(root_dir):
 
 def calculate_metrics(y_true, y_pred, duration):
     res = pd.DataFrame(data=np.zeros((1, 5), dtype=np.float), index=[0],
-                       columns=['precision', 'accuracy', 'recall', 'mcc', 'auc' 'duration'])
+                       columns=['precision', 'accuracy', 'recall', 'mcc', 'auc', 'duration'])
     res['precision'] = precision_score(y_true, y_pred, average='macro')
     res['accuracy'] = accuracy_score(y_true, y_pred)
     res['recall'] = recall_score(y_true, y_pred, average='macro')
-    res['auc'] = roc_auc_score(y_true, y_pred, average='macro', multi_class="ovr")
-    print(res['auc'])
-    #res['auc'] = print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(preprocessing.binarize(np.array(test_labels2).reshape(-1,1)), y_pred, multi_class="ovr"))
+    #res['auc'] = roc_auc_score(y_true, y_pred, average='macro', multi_class="ovr")
+    res['auc'] = roc_auc_score(preprocessing.binarize(np.array(y_true).reshape(-1,1)), y_pred, multi_class="ovr")
     res['mcc'] = matthews_corrcoef(y_true, y_pred)
     res['duration'] = duration
     print(res)
