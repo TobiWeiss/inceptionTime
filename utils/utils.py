@@ -114,7 +114,7 @@ def read_all_properties(root_dir):
 
 
 def calculate_metrics(y_true, y_pred, duration):
-    res = pd.DataFrame(data=np.zeros((1, 4), dtype=np.float), index=[0],
+    res = pd.DataFrame(data=np.zeros((1, 5), dtype=np.float), index=[0],
                        columns=['precision', 'accuracy', 'recall', 'mcc', 'auc' 'duration'])
     res['precision'] = precision_score(y_true, y_pred, average='macro')
     res['accuracy'] = accuracy_score(y_true, y_pred)
@@ -158,7 +158,7 @@ def transform_labels(y_train, y_test):
 def generate_results_csv(output_file_name, root_dir, clfs):
     res = pd.DataFrame(data=np.zeros((0, 8), dtype=np.float), index=[],
                        columns=['property_name', 'iteration',
-                                'precision', 'accuracy', 'recall', 'auc', 'mcc', 'duration'])
+                                'precision', 'accuracy', 'recall', 'mcc','auc', 'duration'])
 
     properties_dict = read_all_properties(ROOT_DIRECTORY)
     for classifier_name in clfs:
