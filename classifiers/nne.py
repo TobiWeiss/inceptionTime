@@ -65,7 +65,7 @@ class Classifier_NNE:
 
                 predictions_file_name = curr_dir + 'y_pred.npy'
                 # check if predictions already made
-                if check_if_file_exits(predictions_file_name):
+                if not check_if_file_exits(predictions_file_name):
                     # then load only the predictions from the file
                     curr_y_pred = np.load(predictions_file_name)
                 else:
@@ -96,3 +96,10 @@ class Classifier_NNE:
         df_metrics.to_csv(self.output_directory + 'df_metrics.csv', index=False)
 
         gc.collect()
+
+        def get_prediction_scores(self, property_name, x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train):
+            model = keras.models.load_model('./results2/inception/' + self.property_name + '/best_model.hdf5', compile=False)
+            curr_y_pred = model.predict(x_test, y_true, x_train, y_train, y_test,
+                                                return_df_metrics=True)
+            print(curr_y_pred)
+

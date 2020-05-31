@@ -166,6 +166,7 @@ def generate_results_csv(output_file_name, root_dir, clfs):
 
         for property_name in properties_dict.keys():
             output_dir = root_dir + '/results/' + property_name + '/' + 'df_metrics.csv'
+            print(output_dir)
             if not os.path.exists(output_dir):
                 continue
             df_metrics = pd.read_csv(output_dir)
@@ -176,7 +177,7 @@ def generate_results_csv(output_file_name, root_dir, clfs):
 
     res.to_csv(root_dir + output_file_name, index=False)
 
-    #res = res.loc[res['classifier_name'].isin(clfs)]
+    res = res.loc[res['classifier_name'].isin(clfs)]
 
     return res
 

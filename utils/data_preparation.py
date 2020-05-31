@@ -206,5 +206,5 @@ def prepare_data(property):
     test_data = consumption_data_with_property[int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO):]
     training_data_downsampled = handle_class_imbalance(training_data)
 
-    save_as_csv(training_data_downsampled, property, '_train')
+    save_as_csv(training_data, property, '_train')
     save_as_csv(test_data, property, '_test')

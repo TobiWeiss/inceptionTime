@@ -9,6 +9,7 @@ from utils.utils  import clear_directory
 from utils.data_preparation import prepare_data
 
 from classifiers.random_forrest import RandomForrest
+from classifiers.dummy_classifier import DummyClf
 
 import utils
 import numpy as np
@@ -125,6 +126,35 @@ if 'RandomForrest' in sys.argv:
     for property_name in PROPERTY_NAMES:
         clf = RandomForrest(property_name)
         clf.classify()
+
+if 'DummyClassifier' in sys.argv:
+    for property_name in PROPERTY_NAMES:
+        print(property_name)
+        clf = DummyClf(property_name)
+        clf.classify()
+
+if 'GetResults' in sys.argv:
+    # for property_name in PROPERTY_NAMES:
+    #     x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data(property_name)
+    #     classifier_name = 'nne'
+    #     clf = create_classifier
+    classifier_name = 'nne'
+
+    datasets_dict = read_all_properties(root_dir)
+
+    tmp_output_directory = root_dir + 'results/' + classifier_name + '/'
+
+    for property_name in PROPERTY_NAMES:
+        print('\t\t\tproperty_name: ', property_name)
+
+        x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data(property_name)
+
+        output_directory = tmp_output_directory + property_name + '/'
+
+        fit_classifier()
+
+        print('\t\t\t\tDONE')
+
 
 
 if sys.argv[1] == 'InceptionTime':
@@ -271,6 +301,7 @@ elif sys.argv[1] == 'generate_results_csv':
     inceptionTime = 'nne/inception'
     # add InceptionTime: an ensemble of 5 Inception networks
     clfs.append(inceptionTime + itr)
+    print(clfs)
     # add InceptionTime for each hyperparameter study
     for xp in xps:
         xp_arr = get_xp_val(xp)
