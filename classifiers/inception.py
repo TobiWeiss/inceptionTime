@@ -16,7 +16,7 @@ from keras.callbacks import EarlyStopping
 class Classifier_INCEPTION:
 
     def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True, batch_size=64,
-                 nb_filters=32, use_residual=True, use_bottleneck=True, depth=6, kernel_size=41, nb_epochs=1):
+                 nb_filters=32, use_residual=True, use_bottleneck=True, depth=6, kernel_size=41, nb_epochs=20):
 
         self.output_directory = output_directory
 
@@ -109,7 +109,7 @@ class Classifier_INCEPTION:
         model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
                                                            save_best_only=True)
                                                            
-        early_stopping = EarlyStopping(monitor='val_loss', patience=20)
+        early_stopping = EarlyStopping(monitor='loss', patience=5)
 
         self.callbacks = [early_stopping ,reduce_lr, model_checkpoint]
 
