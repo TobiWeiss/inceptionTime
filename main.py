@@ -218,7 +218,7 @@ elif sys.argv[1] == 'InceptionTime_HPT':
     classifier_name = 'inception'
     max_iterations = 5
 
-    datasets_dict = read_all_properties(root_dir, property_name)
+    datasets_dict = read_all_properties(root_dir)
 
     for property_name in PROPERTY_NAMES:
         for xp in xps:
@@ -274,18 +274,18 @@ elif sys.argv[1] == 'InceptionTime_HPT':
     property_name = PROPERTY_NAMES[0]
     classifier_name = 'nne'
 
-    datasets_dict = read_all_properties(root_dir, property_name)
+    datasets_dict = read_all_properties(root_dir)
 
     tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + property_name + '/'
 
-    for xp in xps:
-        xp_arr = get_xp_val(xp)
-        for xp_val in xp_arr:
+    for property_name in PROPERTY_NAMES:
+        for xp in xps:
+            xp_arr = get_xp_val(xp)
+            for xp_val in xp_arr:
 
-            clf_name = 'inception/' + xp + '/' + str(xp_val)
+                clf_name = 'inception/' + xp + '/' + str(xp_val)
 
-            for property_name in utils.constants.dataset_names_for_archive[property_name]:
-                x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data()
+                x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data(property_name)
 
                 output_directory = tmp_output_directory + property_name + '/'
 
