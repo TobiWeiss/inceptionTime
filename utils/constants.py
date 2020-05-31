@@ -1,5 +1,5 @@
 #Root directory
-ROOT_DIRECTORY = '/home/ma/inceptionTime/'
+ROOT_DIRECTORY = '/Users/tobiasweiss/ma/InceptionTime/'
 
 #Root directory for prepared data used for training
 PREPARED_DATA_ROOT_DIRECTORY = 'data/prepared_data_by_properties/'
@@ -20,8 +20,8 @@ RESULTS_ROOT_DIRECTORY = 'results/'
 TRAINING_TEST_DATA_RATIO = 0.8
 
 #Reference Properties you wish to classify here
-#PROPERTY_NAMES = ['cooking', 'water_heating', 'space_heating', 'num_devices']
-PROPERTY_NAMES = ['num_devices']
+PROPERTY_NAMES = ['cooking', 'water_heating', 'space_heating', 'num_devices']
+#PROPERTY_NAMES = ['num_devices']
 
 #Weeks of the cer data set used
 WEEKS = list(range(30, 51))

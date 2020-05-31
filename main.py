@@ -220,31 +220,32 @@ elif sys.argv[1] == 'InceptionTime_HPT':
 
     datasets_dict = read_all_properties(root_dir, property_name)
 
-    for xp in xps:
+    for property_name in PROPERTY_NAMES:
+        for xp in xps:
 
-        xp_arr = get_xp_val(xp)
+            xp_arr = get_xp_val(xp)
 
-        print('xp', xp)
+            print('xp', xp)
 
-        for xp_val in xp_arr:
-            print('\txp_val', xp_val)
+            for xp_val in xp_arr:
+                print('\txp_val', xp_val)
 
-            kwargs = {xp: xp_val}
+                kwargs = {xp: xp_val}
 
-            for iter in range(max_iterations):
+                for iter in range(max_iterations):
 
-                trr = ''
-                if iter != 0:
-                    trr = '_itr_' + str(iter)
-                print('\t\titer', iter)
+                    trr = ''
+                    if iter != 0:
+                        trr = '_itr_' + str(iter)
+                    print('\t\titer', iter)
 
-                for property_name in utils.constants.dataset_names_for_archive[property_name]:
+                    #for property_name in utils.constants.dataset_names_for_archive[property_name]:
 
                     output_directory = root_dir + '/results/' + classifier_name + '/' + '/' + xp + '/' + '/' + str(
                         xp_val) + '/' + property_name + trr + '/' + property_name + '/'
 
                     print('\t\t\tdataset_name', property_name)
-                    x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data()
+                    x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc = get_data(property_name)
 
                     # check if data is too big for this gpu
                     size_data = x_train.shape[0] * x_train.shape[1]
