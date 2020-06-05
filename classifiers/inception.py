@@ -16,7 +16,7 @@ from keras.callbacks import EarlyStopping
 class Classifier_INCEPTION:
 
     def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True, batch_size=64,
-            nb_filters=32, use_residual=True, use_bottleneck=True, depth=9, kernel_size=41, nb_epochs=100):
+                 nb_filters=32, use_residual=True, use_bottleneck=True, depth=6, kernel_size=41, nb_epochs=300):
 
         self.output_directory = output_directory
 
@@ -109,14 +109,15 @@ class Classifier_INCEPTION:
         model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
                                                            save_best_only=True)
                                                            
-        early_stopping = EarlyStopping(monitor='loss', patience=5)
+        early_stopping = EarlyStopping(monitor='loss', patience=30)
 
         self.callbacks = [early_stopping ,reduce_lr, model_checkpoint]
 
         return model
 
     def fit(self, x_train, y_train, x_val, y_val, y_true, plot_test_acc=False):
-        # if len(keras.backend.tensorflow) == 0:
+        # if len(keras.backend.tensorflow) == 0
+
         #     print('error no gpu')
         #     exit()
         # else:

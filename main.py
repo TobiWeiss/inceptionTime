@@ -160,7 +160,7 @@ if 'GetResults' in sys.argv:
 if sys.argv[1] == 'InceptionTime':
     # run nb_iter_ iterations of Inception on the whole TSC archive
     classifier_name = 'inception'
-    nb_iter_ = 5
+    nb_iter_ = 1
 
     datasets_dict = read_all_properties(root_dir)
 
