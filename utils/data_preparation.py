@@ -19,9 +19,14 @@ import random
 def combine_consumption_property_data(consumption, properties):
     consumption_data_with_property = []
 
-    for consumption_row, property_row in zip(consumption, properties):
-        if int(consumption_row[0]) == int(property_row[0]) :
-            consumption_data_with_property.append([property_row[1]] + consumption_row[1:-1])
+    # for consumption_row, property_row in zip(consumption, properties):
+    #     if int(consumption_row[0]) == int(property_row[0]) :
+    #         consumption_data_with_property.append([property_row[1]] + consumption_row[1:-1])
+    for consumption_row in consumption:
+        for property_row in properties:
+            if int(consumption_row[0]) == int(property_row[0]) :
+                consumption_data_with_property.append([property_row[1]] + consumption_row[1:-1])
+
 
     return consumption_data_with_property
 
@@ -203,6 +208,7 @@ def prepare_data(property):
     consumption_data_with_property = combine_consumption_property_data(consumption_prepared, properties)
     training_data = consumption_data_with_property[:int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO)]
     test_data = consumption_data_with_property[int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO):]
+    print(len(training_data))
     training_data_downsampled = handle_class_imbalance(training_data)
 
     save_as_csv(training_data_downsampled, property, '_train')
