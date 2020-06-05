@@ -19,10 +19,9 @@ import random
 def combine_consumption_property_data(consumption, properties):
     consumption_data_with_property = []
 
-    for consumption_row in consumption:
-        for property_row in properties:
-            if int(consumption_row[0]) == int(property_row[0]) :
-                consumption_data_with_property.append([property_row[1]] + consumption_row[1:-1])
+    for consumption_row, property_row in zip(consumption, properties):
+        if int(consumption_row[0]) == int(property_row[0]) :
+            consumption_data_with_property.append([property_row[1]] + consumption_row[1:-1])
 
     return consumption_data_with_property
 
@@ -184,7 +183,7 @@ def prepare_consumption_data(consumption_data):
 
 def prepare_data(property):
     consumption = []
-    for week in WEEKS:
+    for week, houseehold in WEEKS:
         consumption_of_week = read_csv_to_list(DATA_WEEKS_ROOT_DIRECORY + "DateienWoche" + str(week))
         for household_consumption in consumption_of_week:
             consumption.append(household_consumption)

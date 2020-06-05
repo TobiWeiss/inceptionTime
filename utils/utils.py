@@ -120,11 +120,10 @@ def calculate_metrics(y_true, y_pred, duration):
     res['precision'] = precision_score(y_true, y_pred, average='macro')
     res['accuracy'] = accuracy_score(y_true, y_pred)
     res['recall'] = recall_score(y_true, y_pred, average='macro')
-    #res['auc'] = roc_auc_score(y_true, y_pred, average='macro', multi_class="ovr")
     res['auc'] = roc_auc_score(preprocessing.binarize(np.array(y_true).reshape(-1,1)), y_pred, multi_class="ovr")
     res['mcc'] = matthews_corrcoef(y_true, y_pred)
     res['duration'] = duration
-    print(res)
+    
     return res
 
 
@@ -181,6 +180,24 @@ def generate_results_csv(output_file_name, root_dir, clfs):
 
     return res
 
+def generate_results_csv_rf(property, y_true, y_pred):
+    # res = pd.DataFrame(data=np.zeros((1, 4), dtype=np.float), index=[0],
+    #                 columns=['property_name',
+    #                         'accuracy', 'mcc','auc'])
+    res = calculate_metrics(y_true, y_pred, 0)
+    
+    # #results = pd.Series(results)
+    # res['property_name'] = results[0]
+    # res['accuracy'] = results[1]
+    # res['mcc'] = results[2]
+    # res['auc'] = results[3]
+    # #res = pd.concat((res, results), axis=0, sort=False)
+    # print(res)
+    
+    output_dir = ROOT_DIRECTORY + 'results/' + 'random_forrest/' + property + '/'
+    create_directory(output_dir)
+    filename = 'df_metrics.csv'
+    res.to_csv(output_dir + filename, index= False)
 
 def plot_epochs_metric(hist, file_name, metric='loss'):
     plt.figure()
@@ -226,6 +243,9 @@ def save_logs(output_directory, hist, y_pred, y_true, duration,
         plot_epochs_metric(hist, output_directory + 'epochs_loss.png')
 
     return df_metrics
+
+#def generate_overall_results_csv(property):
+
 
 
    

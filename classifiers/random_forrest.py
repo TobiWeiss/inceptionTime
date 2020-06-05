@@ -7,6 +7,7 @@ import numpy as np
 from numpy import inf
 
 from utils.constants import ROOT_DIRECTORY
+from utils.utils import generate_results_csv_rf
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import make_classification
@@ -203,14 +204,18 @@ class RandomForrest:
         clf.fit(train_features,train_labels)
 
         y_pred=clf.predict(test_features2)
-        print("Accuracy ( " + self.property_name + " ):",metrics.accuracy_score(test_labels2, y_pred))
+        res = []
+        res.append(self.property_name)
+        res.append(metrics.accuracy_score(test_labels2, y_pred))
+        res.append(metrics.matthews_corrcoef(test_labels2, y_pred))
+        res.append(metrics.roc_auc_score(preprocessing.binarize(np.array(test_labels2).reshape(-1,1)), y_pred, multi_class="ovr"))
+        generate_results_csv_rf(self.property_name, test_labels2, y_pred)
+        print("Accuracy ( " + self.property_name + " ):", metrics.accuracy_score(test_labels2, y_pred))
         print("MCC ( " + self.property_name + " ):",metrics.matthews_corrcoef(test_labels2, y_pred))
         print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(preprocessing.binarize(np.array(test_labels2).reshape(-1,1)), y_pred, multi_class="ovr"))
         print("Precision:",metrics.precision_score(test_labels2, y_pred, average='weighted'))
         print("Recall:",metrics.recall_score(test_labels2, y_pred, average='weighted'))
-        print(clf.predict(test_features2[3].reshape(1, -1)))
-        print(test_labels2[3])
-
+        
     def explain(self):
         train_features, test_features, train_labels, test_labels = train_test_split(self.data_frame, self.labels, test_size = 0.25, random_state = 42)
         # print(train_features)
