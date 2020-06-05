@@ -183,7 +183,7 @@ def prepare_consumption_data(consumption_data):
 
 def prepare_data(property):
     consumption = []
-    for week, houseehold in WEEKS:
+    for week in WEEKS:
         consumption_of_week = read_csv_to_list(DATA_WEEKS_ROOT_DIRECORY + "DateienWoche" + str(week))
         for household_consumption in consumption_of_week:
             consumption.append(household_consumption)
