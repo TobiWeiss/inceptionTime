@@ -9,6 +9,8 @@ import lime.lime_tabular
 import pandas as pd
 from utils.constants import ROOT_DIRECTORY
 from utils.utils import create_directory, read_all_properties, transform_labels
+import heapq
+import copy
 np.random.seed(1)
 
 
@@ -19,7 +21,7 @@ class Lime:
         self.num_features = num_features
         
     def get_model(self):
-        model = keras.models.load_model('./results2/inception/' + self.property_name + '/best_model.hdf5', compile=False)
+        model = keras.models.load_model('./results5/inception/' + self.property_name + '/best_model.hdf5', compile=False)
 
         return model
     
@@ -74,22 +76,103 @@ class Lime:
         else:
             return 1
 
-    def create_explanations(self):
+    def create_explanations(self, save_plots, use_feature_names):
         model = self.get_model()
-        train_data = self.get_training_data()
+        train_data = self.get_training_data()[:300]
         test_data = self.get_explainees()
         feature_names = self.get_feature_names(train_data[0])
-        explainer = lime.lime_tabular.RecurrentTabularExplainer(train_data, class_names=self.class_names, feature_names=feature_names, mode='classification')
+        if use_feature_names:
+            explainer = lime.lime_tabular.RecurrentTabularExplainer(train_data, class_names=self.class_names, feature_names=feature_names, mode='classification')
+        else:
+            explainer = lime.lime_tabular.RecurrentTabularExplainer(train_data, class_names=self.class_names, mode='classification')
         counter = 0
         create_directory(ROOT_DIRECTORY +  'explanations_lime')
-        for household in test_data:
-            if counter == 2:
+        if save_plots:
+            for household in test_data:
                 label = self.get_label(household, model)
-                exp = explainer.explain_instance(np.array([household]), model.predict, num_features=self.num_features, top_labels=1, labels=label)
-                exp.save_to_file("explanations_lime/explanation_" + self.property_name + '_' +  str(counter) + ".html")
-                print(model.predict(np.array([household])))
-                print(exp.as_list(label=label))
-            counter = counter + 1
+                if counter < 10:
+                    exp = explainer.explain_instance(np.array([household]), model.predict, num_features=self.num_features, top_labels=1, labels=label)
+                    exp.save_to_file("explanations_lime/explanation_" + self.property_name + '_' +  str(counter) + ".html")
+                counter = counter + 1
+                if counter == 5:
+                    break
+        else:
+            explanations = []
+            print("Creating explanations for " + self.property_name + "(Lime")
+            for household in test_data:
+                label = self.get_label(household, model)
+                if counter < 50:
+                    exp = explainer.explain_instance(np.array([household]), model.predict, num_features=self.num_features, top_labels=1, labels=label)
+                    explanations.append(exp.as_map())
+                    print("explanation" + str(counter) + " done")
+                counter = counter + 1
+                if counter == 50:
+                    return explanations
+            
+            
+    def create_comparation_metrics(self):
+        model = self.get_model()
+        test_data = self.get_explainees()
+        explanations = self.create_explanations(False, False)
+        self.get_perturbation_analysis_data(explanations, test_data, model)
+        self.get_stability_analysis_data(explanations, test_data, model)
+
+       
+    def get_perturbation_analysis_data(self, explanations, test_data, model):
+        print("Starting Perturbation Analysis (LIME)")
+        test_data_copy = copy.deepcopy(test_data)
+        data_for_analysis = []
+        for index, explanation in enumerate(explanations):
+            if 1 in explanation:
+                initial_classification = model.predict(np.array([test_data[index]])).flatten()[1]
+                for item in explanation[1]:
+                    if(item[1] < 0):
+                        test_data_copy[index][item[0]] = 0
+                post_perturbation_classification = model.predict(np.array([test_data_copy[index]])).flatten()[1]
+                data_for_analysis.append([1, initial_classification, post_perturbation_classification, post_perturbation_classification - initial_classification ])
+            else:
+                continue
+                # for item in explanation[0]:
+                #     if(item[1] > 0):
+                #         test_data[index][item[0]] = 0
+                # print(model.predict(np.array([test_data[index]])))
+            #print(test_data[index])
+        data_for_analysis = pd.DataFrame(data_for_analysis)
+        data_for_analysis.to_csv(ROOT_DIRECTORY + 'results/perturbation/' + self.property_name + '_lime.csv', index=False, header=False)
+        print("Perturbation Analysis Done (LIME)")
+        print(data_for_analysis)    
+
+    def get_stability_analysis_data(self, explanations, test_data, model):
+        print("Starting Stability Analysis (LIME)")
+        data_for_analysis = [[],[]]
+        for index, explanation in enumerate(explanations):
+            if 1 in explanation:
+                #print(explanation['1'])
+                for index in range(0,3):
+                    data_for_analysis[0].append(explanation[1][index][0])
+                    data_for_analysis[1].append(test_data[index][explanation[1][index][0]][0])
+                # for timeseries_index,item in enumerate(explanation['1']):
+                #     if item > 0.02:
+                #         print(timeseries_index)
+                # post_perturbation_classification = model.predict(np.array([test_data[index]])).flatten()[1]
+            else:
+                continue
+                # initial_classification = model.predict(np.array([test_data[index]])).flatten()[0]
+                # for timeseries_index,item in enumerate(explanation['0']):
+                #     if item < -0.01:
+                #         test_data[index][timeseries_index] = 0
+                # post_perturbation_classification = model.predict(np.array([test_data[index]])).flatten()[0]
+                # data_for_analysis.append([0, initial_classification, post_perturbation_classification, post_perturbation_classification - initial_classification  ])
+        data_for_analysis = pd.DataFrame(data_for_analysis)
+        data_for_analysis.to_csv(ROOT_DIRECTORY + 'results/stability/' + self.property_name + '_lime.csv', index=False, header=False)
+        print("Stability Analysis Done (LIME)")
+        # data_for_analysis = pd.DataFrame(data_for_analysis)
+        # data_for_analysis.to_csv(ROOT_DIRECTORY + 'results/perturbation/' + self.property_name + '_shap.csv') 
+
+
+
+
+
 
 
 

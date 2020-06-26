@@ -15,6 +15,7 @@ from sklearn import metrics
 from sklearn import preprocessing
 import lime
 import lime.lime_tabular
+import shap
 
 ### Feature Extraction
 
@@ -43,12 +44,13 @@ FIRST_AFTERNOON_END = 36
 FIRST_EVENING_START = 37
 FIRST_EVENING_END = 44
 FIRST_NIGHT_START = 3
-FIRST_NGIHT_END = 12
+FIRST_NIGHT_END = 12
 
 class RandomForrest:
     def __init__(self, property_name):
         self.property_name = property_name
         self.labels = list()
+        self.feature_names = list()
         self.data_frame = pd.DataFrame()
     
     def prepare_data(self, prepare_training_data):
@@ -65,7 +67,7 @@ class RandomForrest:
         # Returns average consumption for a given time of the day and a given time of the week
         def get_average_consumption_part_of_day(daytime_start, daytime_end, weekday_start, weekday_end):
             column = pd.DataFrame()
-            for weekday in range (weekday_start, weekday_end):
+            for weekday in range (weekday_start, weekday_end + 1):
                 column[weekday] = data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].mean(axis=1)
     
             return column.mean(axis =1).tolist()
@@ -73,23 +75,23 @@ class RandomForrest:
         self.data_frame['c_week'] = get_average_consumption_part_of_day(FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
         self.data_frame['c_morning'] = get_average_consumption_part_of_day(FIRST_MORNING_START, FIRST_MORNING_END, MONDAY, SUNDAY)
         self.data_frame['c_noon'] = get_average_consumption_part_of_day(FIRST_NOON_START, FIRST_NOON_END, MONDAY, SUNDAY)
-        self.data_frame['c_afternoon'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, SUNDAY)
+        self.data_frame['c_afternoon'] = get_average_consumption_part_of_day(FIRST_AFTERNOON_START, FIRST_AFTERNOON_END, MONDAY, SUNDAY)
         self.data_frame['c_evening'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, SUNDAY)
-        self.data_frame['c_night'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, SUNDAY)
+        self.data_frame['c_night'] = get_average_consumption_part_of_day(FIRST_NIGHT_START, FIRST_NIGHT_END, MONDAY, SUNDAY)
 
         self.data_frame['c_weekday'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, FRIDAY)
         self.data_frame['c_wd_morning'] = get_average_consumption_part_of_day(FIRST_MORNING_START, FIRST_MORNING_END, MONDAY, FRIDAY)
         self.data_frame['c_wd_noon'] = get_average_consumption_part_of_day(FIRST_NOON_START, FIRST_NOON_END, MONDAY, FRIDAY)
-        self.data_frame['c_wd_afternoon'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, FRIDAY)
+        self.data_frame['c_wd_afternoon'] = get_average_consumption_part_of_day(FIRST_AFTERNOON_START, FIRST_AFTERNOON_END, MONDAY, FRIDAY)
         self.data_frame['c_wd_evening'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, FRIDAY)
-        self.data_frame['c_wd_night'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, MONDAY, FRIDAY)
+        self.data_frame['c_wd_night'] = get_average_consumption_part_of_day(FIRST_NIGHT_START, FIRST_NIGHT_END, MONDAY, FRIDAY)
 
         self.data_frame['c_weekend'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, SATURDAY, SUNDAY)
         self.data_frame['c_we_morning'] = get_average_consumption_part_of_day(FIRST_MORNING_START, FIRST_MORNING_END, SATURDAY, SUNDAY)
         self.data_frame['c_we_noon'] = get_average_consumption_part_of_day(FIRST_NOON_START, FIRST_NOON_END, SATURDAY, SUNDAY)
-        self.data_frame['c_we_afternoon'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, SATURDAY, SUNDAY)
+        self.data_frame['c_we_afternoon'] = get_average_consumption_part_of_day(FIRST_AFTERNOON_START, FIRST_AFTERNOON_END, SATURDAY, SUNDAY)
         self.data_frame['c_we_evening'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, SATURDAY, SUNDAY)
-        self.data_frame['c_we_night'] = get_average_consumption_part_of_day(FIRST_EVENING_START, FIRST_EVENING_END, SATURDAY, SUNDAY)
+        self.data_frame['c_we_night'] = get_average_consumption_part_of_day(FIRST_NIGHT_START, FIRST_NIGHT_END, SATURDAY, SUNDAY)
 
 
         ## Feature Category: Relations
@@ -97,7 +99,7 @@ class RandomForrest:
         # Returns maximum consumption for a given time of the day and a given time of the week
         def get_max_consumption_part_of_day(daytime_start, daytime_end, weekday_start, weekday_end):
             column = pd.DataFrame()
-            for weekday in range (weekday_start, weekday_end):
+            for weekday in range (weekday_start, weekday_end + 1):
                 column[weekday] = data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].max(axis=1)
                 
 
@@ -106,7 +108,7 @@ class RandomForrest:
         # Returns minimum consumption for a given time of the day and a given time of the week
         def get_min_consumption_part_of_day(daytime_start, daytime_end, weekday_start, weekday_end):
             column = pd.DataFrame()
-            for weekday in range (weekday_start, weekday_end):
+            for weekday in range (weekday_start, weekday_end + 1):
                 column[weekday] = data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].min(axis=1)
                 
             return column.min(axis =1).tolist()
@@ -163,14 +165,14 @@ class RandomForrest:
 
         def get_average_max_consumption_part_of_day(daytime_start, daytime_end, weekday_start, weekday_end):
             column = pd.DataFrame()
-            for weekday in range (weekday_start, weekday_end):
+            for weekday in range (weekday_start, weekday_end + 1):
                 column[weekday] = data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].max(axis=1)
     
             return column.mean(axis =1).tolist()
 
         def get_average_min_consumption_part_of_day(daytime_start, daytime_end, weekday_start, weekday_end):
             column = pd.DataFrame()
-            for weekday in range (weekday_start, weekday_end):
+            for weekday in range (weekday_start, weekday_end + 1):
                 column[weekday] = data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].min(axis=1)
     
             return column.mean(axis =1).tolist()
@@ -185,9 +187,32 @@ class RandomForrest:
         self.data_frame['c_min_avg'] = get_average_min_consumption_part_of_day(FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
         # self.data_frame['s_cor'] = data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1)
         # print(data.iloc[:, FIRST_DAY_START : FIRST_DAY_END].corrwith(data.iloc[:, FIRST_DAY_START + TUESDAY * 48 : FIRST_DAY_END + TUESDAY * 48], axis = 1))
+        
+        ## Feature Category: time-series infromation
+        
 
+        def get_average_time_of_day_where_consumption_above_threshold(threshold, daytime_start, daytime_end, weekday_start, weekday_end):
+            column = pd.DataFrame()
+            for weekday in range (weekday_start, weekday_end + 1):
+                times_of_day = []
+                for index, row in data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)].iterrows():
+                    if np.where(row > threshold)[0].size > 0:
+                        times_of_day.append(np.where(row > 1)[0][0])
+                    else:
+                        times_of_day.append(inf)
+                #column[weekday] = np.where(data.iloc[:, daytime_start + (48 * weekday): daytime_end + (48 * weekday)] > 1)[1].tolist()
+                column[weekday] = times_of_day
+               
+
+            return column.mean(axis =1).tolist()
+
+        self.data_frame['t_above_1kw'] = get_average_time_of_day_where_consumption_above_threshold(1, FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
+        self.data_frame['t_above_2kw'] = get_average_time_of_day_where_consumption_above_threshold(2, FIRST_DAY_START, FIRST_DAY_END, MONDAY, SUNDAY)
+        self.feature_names = list(self.data_frame.columns)
         self.data_frame = np.nan_to_num(self.data_frame)
         self.data_frame = np.where(self.data_frame >= np.finfo(np.float64).max, 0, self.data_frame)
+
+       
 
 # ### Random Forrest
     def classify(self):
@@ -212,22 +237,41 @@ class RandomForrest:
         generate_results_csv_rf(self.property_name, test_labels2, y_pred)
         print("Accuracy ( " + self.property_name + " ):", metrics.accuracy_score(test_labels2, y_pred))
         print("MCC ( " + self.property_name + " ):",metrics.matthews_corrcoef(test_labels2, y_pred))
-        print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(preprocessing.binarize(np.array(test_labels2).reshape(-1,1)), y_pred, multi_class="ovr"))
-        print("Precision:",metrics.precision_score(test_labels2, y_pred, average='weighted'))
-        print("Recall:",metrics.recall_score(test_labels2, y_pred, average='weighted'))
+        print("AUC ( " + self.property_name + " ):",metrics.roc_auc_score(test_labels2, y_pred, multi_class="ovr"))
+        # print("Precision:",metrics.precision_score(test_labels2, y_pred, average='weighted'))
+        # print("Recall:",metrics.recall_score(test_labels2, y_pred, average='weighted'))
+
+        explainer = lime.lime_tabular.LimeTabularExplainer(np.array(train_features), feature_names=self.feature_names, discretize_continuous=True)
+        for index in range(0,11):
+            exp = explainer.explain_instance(test_features2[index], clf.predict_proba, num_features=10, top_labels=0)
+            exp.save_to_file("explanations_lime/explanation_lime_rf_"  + self.property_name + '_' + str(index) + ".html")
+
+        print(clf.predict_proba(test_features2[0].reshape(1, -1)))
+        explainer = shap.KernelExplainer(clf.predict_proba, train_features[:50, :], link="identity")
+        shap_values = explainer.shap_values(test_features2[:50, :], nsamples=50)
+
+        # print(test_labels2[0])
+        shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + 'many' +  '.html', shap.force_plot(explainer.expected_value[0], shap_values[0], test_features2[:50, :], feature_names=self.feature_names))
+        #shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + '0_many2_summary' +  '.html', shap.summary_plot(shap_values, test_features2[:50, :], feature_names=self.feature_names))
+        print(clf.feature_importances_)
+        for index in range(0,11):
+            shap_values = explainer.shap_values(test_features2[index, :])
+            shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + str(index) +  '.html', shap.force_plot(explainer.expected_value[0], shap_values[0], test_features2[index], feature_names=self.feature_names))
+
         
-    def explain(self):
-        train_features, test_features, train_labels, test_labels = train_test_split(self.data_frame, self.labels, test_size = 0.25, random_state = 42)
-        # print(train_features)
-        # feature_names = list(train_features.columns)
-         #Create a Gaussian Classifier
-        clf=RandomForestClassifier(n_estimators=100)
 
-        #Train the model using the training sets y_pred=clf.predict(X_test)
-        clf.fit(train_features,train_labels)
-        self.data_frame = pd.DataFrame()
-        self.prepare_data()
-        explainer = lime.lime_tabular.LimeTabularExplainer(np.array(train_features), feature_names=list(self.data_frame.columns), discretize_continuous=True)
-        exp = explainer.explain_instance(test_features[2], clf.predict_proba, num_features=10, top_labels=0)
-        exp.save_to_file("explanations/explanation_" +  'rf' + '_' + self.property_name + ".html")
+        #shap.force_plot(explainer.expected_value[0], shap_values[0][0,:], test_features2.iloc[0,:])
+    #     self.explain()
+        
+    # def explain(self):
+    #     #train_features, test_features, train_labels, test_labels = train_test_split(self.data_frame, self.labels, test_size = 1, random_state = 42)
+    #     # print(train_features)
+    #     # feature_names = list(train_features.columns)
+    #      #Create a Gaussian Classifier
+    #     clf=RandomForestClassifier(n_estimators=100)
 
+    #     #Train the model using the training sets y_pred=clf.predict(X_test)
+    #     clf.fit(train_features,train_labels)
+    #     self.data_frame = pd.DataFrame()
+    #     self.prepare_data(False)
+        

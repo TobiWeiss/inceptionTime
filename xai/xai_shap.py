@@ -7,7 +7,11 @@ import sys
 sys.path.insert(1, '../')
 from utils.utils import create_directory, read_all_properties
 from utils.constants import ROOT_DIRECTORY
+import copy
 import numpy as np
+import pandas as pd
+import heapq
+
 
 class Shap:
     def __init__(self, property_name, class_names, num_features):
@@ -16,7 +20,7 @@ class Shap:
         self.num_features = num_features
         
     def get_model(self):
-        model = keras.models.load_model('./results2/inception/' + self.property_name + '/best_model.hdf5', compile=False)
+        model = keras.models.load_model('./results5/inception/' + self.property_name + '/best_model.hdf5', compile=False)
 
         return model
     
@@ -71,37 +75,100 @@ class Shap:
         else:
             return 1
 
-    def create_explanations(self):
+    def create_explanations(self, save_plots, use_feature_names):
         train_data = self.get_training_data()
         test_data = self.get_explainees()
         model = self.get_model()
         feature_names = self.get_feature_names(train_data[0])
-        # background = train_data[np.random.choice(train_data.shape[0], 100, replace=False)]# we use the first 100 training examples as our background dataset to integrate over
-        # explainer = shap.KernelExplainer(self.model.predict,  train_data, link="logit")
-        # shap_values = explainer.shap_values(test_data, nsamples=100)
-        # counter = 0
-        # create_directory(ROOT_DIRECTORY +  'explanations')
         sess = K.get_session()
         explainer = shap.DeepExplainer(model, train_data[:100], sess)
-        y_pred = model.predict(np.array([test_data[2]]))
-        #print(y_pred)
-        shap_values = explainer.shap_values(np.array([test_data[2]]))
-        # print('exp', explainer.expected_value)
-        # print('input1', explainer.expected_value[0])
-        # print('input2', shap_values[0][0])
-        # print('input2a', shap_values[1])
-        #shap.force_plot(explainer.expected_value[0], shap_values[0][0], show=False).savefig('demo.jpg')
-        shap.multioutput_decision_plot
-        #shap.save_html('test.html', shap.force_plot(explainer.expected_value[1], shap_values[1][0], show=False, features=test_data[3]) )
-        #shap.save_html('test.html', shap.summary_plot(shap_values[0][0], test_data[:1]) )
         counter = 0
         create_directory(ROOT_DIRECTORY +  'explanations_shap')
-        for household in test_data:
-            if counter == 2:
+        if save_plots:
+            for household in test_data:
                 label = self.get_label(household)
-                print(model.predict(np.array([household])))
-                print(label)
-                shap_values = explainer.shap_values(np.array([household]))
-                shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + str(counter) +  '.html', shap.force_plot(explainer.expected_value[self.get_label(household)], shap_values[self.get_label(household)][0], show=False, features=household))
-            counter = counter + 1
+                if counter < 10 and label == 1:
+                    shap_values = explainer.shap_values(np.array([household]))
+                    shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + str(counter) +  '.html', shap.force_plot(explainer.expected_value[self.get_label(household)], shap_values[self.get_label(household)][0].flatten(), show=False, features=household.flatten(), feature_names=feature_names))
+                counter = counter + 1
+                if counter == 5:
+                    break
+        else:
+            explanations = []
+            print("Creating explanations for " + self.property_name + "(Shap")
+            for household in test_data:
+                label = self.get_label(household)
+                if counter < 50:
+                    shap_values = explainer.shap_values(np.array([household]))
+                    explanations.append({str(label): shap_values[self.get_label(household)][0].flatten()})
+                    print("explanation" + str(counter) + " done")
+                counter = counter + 1
+                if counter == 50:
+                    return explanations
+    
+    def create_comparation_metrics(self):
+        model = self.get_model()
+        test_data = self.get_explainees()
+        explanations = self.create_explanations(False, False)
+        self.get_perturbation_analysis_data(explanations, test_data, model)
+        self.get_stability_analysis_data(explanations, test_data, model)
+
+       
+    def get_perturbation_analysis_data(self, explanations, test_data, model):
+        print("Starting Perturbation Analysis (SHAP)")
+        test_data_copy = copy.deepcopy(test_data)
+        data_for_analysis = []      
+        for index, explanation in enumerate(explanations):
+            if '1' in explanation:
+                initial_classification = model.predict(np.array([test_data[index]])).flatten()[1]
+                for timeseries_index,item in enumerate(explanation['1']):
+                    if item > 0.02:
+                        test_data_copy[index][timeseries_index] = 0
+                post_perturbation_classification = model.predict(np.array([test_data_copy[index]])).flatten()[1]
+                data_for_analysis.append([1, initial_classification, post_perturbation_classification, post_perturbation_classification - initial_classification ])
+            else:
+                continue
+                # initial_classification = model.predict(np.array([test_data[index]])).flatten()[0]
+                # for timeseries_index,item in enumerate(explanation['0']):
+                #     if item < -0.01:
+                #         test_data[index][timeseries_index] = 0
+                # post_perturbation_classification = model.predict(np.array([test_data[index]])).flatten()[0]
+                # data_for_analysis.append([0, initial_classification, post_perturbation_classification, post_perturbation_classification - initial_classification  ])
+        data_for_analysis = pd.DataFrame(data_for_analysis)
+        data_for_analysis.to_csv(ROOT_DIRECTORY + 'results/perturbation/' + self.property_name + '_shap.csv', index=False, header=False)
+        print("Perturbation Analysis Done (SHAP)")
+        
+    
+    def get_stability_analysis_data(self, explanations, test_data, model):
+        print("Starting Stability Analysis (SHAP)")
+        data_for_analysis = [[],[]]
+        for index, explanation in enumerate(explanations):
+            if '1' in explanation:
+                #print(explanation['1'])
+                for value in heapq.nlargest(3, explanation['1']):
+                    data_for_analysis[0].append(np.where(explanation['1'] == value)[0][0])
+                    print(test_data[index][np.where(explanation['1'] == value)[0][0]])
+                    print(np.where(explanation['1'] == value))
+                    print(test_data[index])
+                    print(test_data[index][112])
+                    data_for_analysis[1].append(test_data[index][np.where(explanation['1'] == value)[0][0]][0])
+                    #print(explanation['1'].index(value))
+                # for timeseries_index,item in enumerate(explanation['1']):
+                #     if item > 0.02:
+                #         print(timeseries_index)
+                # post_perturbation_classification = model.predict(np.array([test_data[index]])).flatten()[1]
+            else:
+                continue
+                # initial_classification = model.predict(np.array([test_data[index]])).flatten()[0]
+                # for timeseries_index,item in enumerate(explanation['0']):
+                #     if item < -0.01:
+                #         test_data[index][timeseries_index] = 0
+                # post_perturbation_classification = model.predict(np.array([test_data[index]])).flatten()[0]
+                # data_for_analysis.append([0, initial_classification, post_perturbation_classification, post_perturbation_classification - initial_classification  ])
+        data_for_analysis = pd.DataFrame(data_for_analysis)
+        data_for_analysis.to_csv(ROOT_DIRECTORY + 'results/stability/' + self.property_name + '_shap.csv', index=False, header=False) 
+        print("Stability Analysis Done (SHAP)")
+        # data_for_analysis = pd.DataFrame(data_for_analysis)
+        # data_for_analysis.to_csv(ROOT_DIRECTORY + 'results/perturbation/' + self.property_name + '_shap.csv') 
+
 

@@ -46,7 +46,7 @@ class Classifier_INCEPTION:
         else:
             input_inception = input_tensor
 
-        # kernel_size_s = [41, 21, 11]
+        # kernel_size_s = [40, 20, 10]
         # For Conv1D-Layer which are connected with the bottleneck
         kernel_size_s = [self.kernel_size // (2 ** i) for i in range(3)]
 

@@ -15,6 +15,7 @@ from scipy.stats.stats import zscore
 from scipy import stats
 from sklearn.utils import resample
 import random
+from scipy.stats import mstats
 
 def combine_consumption_property_data(consumption, properties):
     consumption_data_with_property = []
@@ -52,6 +53,71 @@ def save_as_csv(consumption_data_with_property, property, postfix):
         wr = csv.writer(file)
         for row in consumption_data_with_property:
             wr.writerow(row)
+
+# def get_heating_timer_properties():
+#     survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
+#     survey.pop(0)
+#     heating_timer_properties_as_list = list()
+#     survey_as_df = pd.DataFrame(survey)
+#     for index, row in enumerate(survey):
+#         if row[42] == '8' and (row[13] == '8' or row[13] == None) and row[10] == '2':
+#             class_val = 1
+#         elif row[11] != None and row[13] != None and row[10] == '2':
+#             class_val = 0
+#         else:
+#             continue
+#         presence_properties_as_list.append([survey_as_df.iloc[index, 0], class_val])
+
+#     return presence_properties_as_list
+
+def get_presence_properties():
+    survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
+    survey.pop(0)
+    presence_properties_as_list = list()
+    survey_as_df = pd.DataFrame(survey)
+    for index, row in enumerate(survey):
+        if row[11] == '8'  and row[13] == '8' and row[9] == '3':
+            class_val = 1
+        elif row[11] != None and row[13] != None and row[9] == '3':
+            class_val = 0
+        else:
+            continue
+        presence_properties_as_list.append([survey_as_df.iloc[index, 0], class_val])
+
+    return presence_properties_as_list
+
+def get_presence_two_pers_properties():
+    survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
+    survey.pop(0)
+    presence_properties_as_list = list()
+    survey_as_df = pd.DataFrame(survey)
+    for index, row in enumerate(survey):
+        if row[11] == '8' and row[9] == '2' and row[10] == '2':
+            class_val = 1
+        elif row[11] !='8' and row[10] == '2' and row[9] == '2':
+            class_val = 0
+        else:
+            continue
+        presence_properties_as_list.append([survey_as_df.iloc[index, 0], class_val])
+
+    return presence_properties_as_list
+
+def get_single_presence_properties():
+    survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
+    survey.pop(0)
+    presence_properties_as_list = list()
+    survey_as_df = pd.DataFrame(survey)
+    for index, row in enumerate(survey):
+        if row[9] == '1' and (row[2] == '4' or row[2] == '5' or row[2] == '6'):
+            class_val = 1
+        elif row[9] == '1':
+            class_val = 0
+        else:
+            continue
+        presence_properties_as_list.append([survey_as_df.iloc[index, 0], class_val])
+
+    return presence_properties_as_list
+
 
 def get_cooking_properties():
     survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
@@ -95,7 +161,7 @@ def get_space_heating_properties():
     survey.pop(0)
     space_heating_properties_as_list = list()
     for row in survey:
-        if row[41] == '1'  or row[42] == '1':
+        if row[42] == '1':
              space_heating_properties_as_list.append([row[0], 1])
         else:
             space_heating_properties_as_list.append([row[0], 0])
@@ -178,8 +244,10 @@ def handle_class_imbalance(consumption_data_with_property):
 def prepare_consumption_data(consumption_data):
     consumption_data_as_df = pd.DataFrame(consumption_data)
     consumption_data_as_df = consumption_data_as_df.dropna()
-    #consumption_data_as_df = consumption_data_as_df.between(0, consumption_data_as_df.quantile(.95))
-    consumption_data_as_df.iloc[:, 1:] = consumption_data_as_df.iloc[:, 1:].apply(zscore)
+    #consumption_data_as_df.iloc[:, 1:] = pd.DataFrame(mstats.winsorize(consumption_data_as_df.iloc[:, 1:], limits=[0.3, 0.2]))
+    
+    
+    #consumption_data_as_df.iloc[:, 1:] = consumption_data_as_df.iloc[:, 1:].apply(zscore)
 
 
     consumption_data = consumption_data_as_df.values.tolist()
@@ -200,7 +268,10 @@ def prepare_data(property):
         'cooking': get_cooking_properties(),
         'water_heating': get_water_heating_properpties(),
         'space_heating': get_space_heating_properties(),
-        'num_devices': get_devices_properties()
+        'num_devices': get_devices_properties(),
+        #'presence': get_presence_properties()
+        #'presence': get_presence_two_pers_properties()
+        'presence': get_single_presence_properties()
     }
 
     properties = property_functions[property]
@@ -208,7 +279,6 @@ def prepare_data(property):
     consumption_data_with_property = combine_consumption_property_data(consumption_prepared, properties)
     training_data = consumption_data_with_property[:int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO)]
     test_data = consumption_data_with_property[int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO):]
-    print(len(training_data))
     training_data_downsampled = handle_class_imbalance(training_data)
 
     save_as_csv(training_data_downsampled, property, '_train')
