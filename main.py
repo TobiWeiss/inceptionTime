@@ -6,7 +6,7 @@ from utils.utils import transform_labels
 from utils.utils import create_directory
 from utils.utils import generate_results_csv
 from utils.utils  import clear_directory
-from utils.data_preparation import prepare_data
+from utils.data_preparation import prepare_data, get_rf_features
 
 from classifiers.random_forrest import RandomForrest
 from classifiers.dummy_classifier import DummyClf
@@ -134,14 +134,17 @@ if 'CompareExplanations' in sys.argv:
     
     
 if 'PrepareData' in sys.argv:
-    print('Preparing data...')
+    print('Preparing consumption data...')
     for property_name in PROPERTY_NAMES:
             start_time = time.time()
             print('Preparing ' + property_name)
             prepare_data(property_name)
             print('Done preparing ' + property_name)
             print("duration %s seconds" % (time.time() - start_time))
-    print('... done preparing data')
+    print('... done preparing consumption data')
+    print('Preparing random forrest features...')
+    get_rf_features()
+    print('... done preparing random forrest features')
 
 if 'RandomForrest' in sys.argv:
     for property_name in PROPERTY_NAMES:

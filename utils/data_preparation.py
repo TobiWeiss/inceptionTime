@@ -8,6 +8,7 @@ from utils.constants import DATA_PROPERTIES_ROOT_DIRECTORY
 from utils.constants import TRAINING_TEST_DATA_RATIO
 from utils.constants import PROPERTIES_ENCODED_DIRECTORY
 from utils.constants import WEEKS
+from classifiers.random_forrest import RandomForrest
 import re
 import pandas as pd
 import numpy as np
@@ -54,23 +55,26 @@ def save_as_csv(consumption_data_with_property, property, postfix):
         for row in consumption_data_with_property:
             wr.writerow(row)
 
-# def get_heating_timer_properties():
-#     survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
-#     survey.pop(0)
-#     heating_timer_properties_as_list = list()
-#     survey_as_df = pd.DataFrame(survey)
-#     for index, row in enumerate(survey):
-#         if row[42] == '8' and (row[13] == '8' or row[13] == None) and row[10] == '2':
-#             class_val = 1
-#         elif row[11] != None and row[13] != None and row[10] == '2':
-#             class_val = 0
-#         else:
-#             continue
-#         presence_properties_as_list.append([survey_as_df.iloc[index, 0], class_val])
+def get_rf_features():
+    for property in PROPERTY_NAMES:
+        random_forrest = RandomForrest(property)
+        random_forrest.prepare_data(prepare_training_data=True)
+        features_as_data_frame = pd.DataFrame(random_forrest.data_frame)
+        features_as_data_frame.insert(loc=0, column='0', value=random_forrest.labels)
+        features_as_data_frame = features_as_data_frame.iloc[1:, :].values.tolist()
+        training_data = features_as_data_frame
 
-#     return presence_properties_as_list
+        random_forrest.prepare_data(prepare_training_data=False)
+        features_as_data_frame = pd.DataFrame(random_forrest.data_frame)
+        features_as_data_frame.insert(loc=0, column='0', value=random_forrest.labels)
+        features_as_data_frame = features_as_data_frame.iloc[1:, :].values.tolist()
+        test_data = features_as_data_frame
 
-def get_presence_properties():
+        save_as_csv(training_data, property + '_rf_features', '_train')
+        save_as_csv(test_data, property + '_rf_features', '_test')
+    exit()
+
+def get_presence_fam_properties():
     survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
     survey.pop(0)
     presence_properties_as_list = list()
@@ -79,6 +83,22 @@ def get_presence_properties():
         if row[11] == '8'  and row[13] == '8' and row[9] == '3':
             class_val = 1
         elif row[11] != None and row[13] != None and row[9] == '3':
+            class_val = 0
+        else:
+            continue
+        presence_properties_as_list.append([survey_as_df.iloc[index, 0], class_val])
+
+    return presence_properties_as_list
+
+def get_presence_general_properties():
+    survey = read_csv_to_list(DATA_PROPERTIES_ROOT_DIRECTORY + "properties.csv", ",")
+    survey.pop(0)
+    presence_properties_as_list = list()
+    survey_as_df = pd.DataFrame(survey)
+    for index, row in enumerate(survey):
+        if row[11] == '8'  and (row[13] == '8' or row[13] == None):
+            class_val = 1
+        elif row[11] != None and row[13] != None:
             class_val = 0
         else:
             continue
@@ -264,14 +284,16 @@ def prepare_data(property):
 
     consumption_prepared = prepare_consumption_data(consumption)
 
+
     property_functions = {
         'cooking': get_cooking_properties(),
         'water_heating': get_water_heating_properpties(),
         'space_heating': get_space_heating_properties(),
         'num_devices': get_devices_properties(),
-        #'presence': get_presence_properties()
-        #'presence': get_presence_two_pers_properties()
-        'presence': get_single_presence_properties()
+        'presence_general': get_presence_general_properties(),
+        'presence_family': get_presence_fam_properties(),
+        'presence_two_pers': get_presence_two_pers_properties(),
+        'presence_single': get_single_presence_properties(),
     }
 
     properties = property_functions[property]
