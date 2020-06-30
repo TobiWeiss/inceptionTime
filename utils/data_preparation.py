@@ -48,12 +48,19 @@ def store_indiviudal_properties(properties, property_name, class_one, class_two,
             wr.writerow(row)
 
 
-def save_as_csv(consumption_data_with_property, property, postfix):
-    create_directory(PREPARED_DATA_ROOT_DIRECTORY +  property)
-    with open(PREPARED_DATA_ROOT_DIRECTORY + property + '/' + property + postfix, 'w+') as file:
-        wr = csv.writer(file)
-        for row in consumption_data_with_property:
-            wr.writerow(row)
+def save_as_csv(consumption_data_with_property, property, postfix, normalize):
+    if normalize == True:
+        create_directory(PREPARED_DATA_ROOT_DIRECTORY + 'normalized/' + property)
+        with open(PREPARED_DATA_ROOT_DIRECTORY + 'normalized/' + property + '/' + property + postfix, 'w+') as file:
+            wr = csv.writer(file)
+            for row in consumption_data_with_property:
+                wr.writerow(row)
+    else:
+        create_directory(PREPARED_DATA_ROOT_DIRECTORY + 'original/' + property)
+        with open(PREPARED_DATA_ROOT_DIRECTORY + 'original/' + property + '/' + property + postfix, 'w+') as file:
+            wr = csv.writer(file)
+            for row in consumption_data_with_property:
+                wr.writerow(row)
 
 def get_rf_features():
     for property in PROPERTY_NAMES:
@@ -261,20 +268,20 @@ def handle_class_imbalance(consumption_data_with_property):
     df_downsampled = df_downsampled.sample(frac=1)
     return df_downsampled.values.tolist()
 
-def prepare_consumption_data(consumption_data):
+def prepare_consumption_data(consumption_data, normalize):
     consumption_data_as_df = pd.DataFrame(consumption_data)
     consumption_data_as_df = consumption_data_as_df.dropna()
     #consumption_data_as_df.iloc[:, 1:] = pd.DataFrame(mstats.winsorize(consumption_data_as_df.iloc[:, 1:], limits=[0.3, 0.2]))
     
-    
-    #consumption_data_as_df.iloc[:, 1:] = consumption_data_as_df.iloc[:, 1:].apply(zscore)
+    if normalize == True:
+        consumption_data_as_df.iloc[:, 1:] = consumption_data_as_df.iloc[:, 1:].apply(zscore)
 
 
     consumption_data = consumption_data_as_df.values.tolist()
 
     return consumption_data
 
-def prepare_data(property):
+def prepare_data(property, normalize):
     consumption = []
     for week in WEEKS:
         consumption_of_week = read_csv_to_list(DATA_WEEKS_ROOT_DIRECORY + "DateienWoche" + str(week))
@@ -282,7 +289,7 @@ def prepare_data(property):
             consumption.append(household_consumption)
    
 
-    consumption_prepared = prepare_consumption_data(consumption)
+    consumption_prepared = prepare_consumption_data(consumption, normalize)
 
 
     property_functions = {
@@ -303,5 +310,5 @@ def prepare_data(property):
     test_data = consumption_data_with_property[int(len(consumption_data_with_property) * TRAINING_TEST_DATA_RATIO):]
     training_data_downsampled = handle_class_imbalance(training_data)
 
-    save_as_csv(training_data_downsampled, property, '_train')
-    save_as_csv(test_data, property, '_test')
+    save_as_csv(training_data_downsampled, property, '_train', normalize)
+    save_as_csv(test_data, property, '_test', normalize)

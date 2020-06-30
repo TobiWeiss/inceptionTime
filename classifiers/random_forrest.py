@@ -241,22 +241,22 @@ class RandomForrest:
         # print("Precision:",metrics.precision_score(test_labels2, y_pred, average='weighted'))
         # print("Recall:",metrics.recall_score(test_labels2, y_pred, average='weighted'))
 
-        explainer = lime.lime_tabular.LimeTabularExplainer(np.array(train_features), feature_names=self.feature_names, discretize_continuous=True)
-        for index in range(0,11):
-            exp = explainer.explain_instance(test_features2[index], clf.predict_proba, num_features=10, top_labels=0)
-            exp.save_to_file("explanations_lime/explanation_lime_rf_"  + self.property_name + '_' + str(index) + ".html")
+        # explainer = lime.lime_tabular.LimeTabularExplainer(np.array(train_features), feature_names=self.feature_names, discretize_continuous=True)
+        # for index in range(0,11):
+        #     exp = explainer.explain_instance(test_features2[index], clf.predict_proba, num_features=10, top_labels=0)
+        #     exp.save_to_file("explanations_lime/explanation_lime_rf_"  + self.property_name + '_' + str(index) + ".html")
 
-        print(clf.predict_proba(test_features2[0].reshape(1, -1)))
-        explainer = shap.KernelExplainer(clf.predict_proba, train_features[:50, :], link="identity")
-        shap_values = explainer.shap_values(test_features2[:50, :], nsamples=50)
+        # print(clf.predict_proba(test_features2[0].reshape(1, -1)))
+        # explainer = shap.KernelExplainer(clf.predict_proba, train_features[:50, :], link="identity")
+        # shap_values = explainer.shap_values(test_features2[:50, :], nsamples=50)
 
-        # print(test_labels2[0])
-        shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + 'many' +  '.html', shap.force_plot(explainer.expected_value[0], shap_values[0], test_features2[:50, :], feature_names=self.feature_names))
-        #shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + '0_many2_summary' +  '.html', shap.summary_plot(shap_values, test_features2[:50, :], feature_names=self.feature_names))
-        print(clf.feature_importances_)
-        for index in range(0,11):
-            shap_values = explainer.shap_values(test_features2[index, :])
-            shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + str(index) +  '.html', shap.force_plot(explainer.expected_value[0], shap_values[0], test_features2[index], feature_names=self.feature_names))
+        # # print(test_labels2[0])
+        # shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + 'many' +  '.html', shap.force_plot(explainer.expected_value[0], shap_values[0], test_features2[:50, :], feature_names=self.feature_names))
+        # #shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + '0_many2_summary' +  '.html', shap.summary_plot(shap_values, test_features2[:50, :], feature_names=self.feature_names))
+        # print(clf.feature_importances_)
+        # for index in range(0,11):
+        #     shap_values = explainer.shap_values(test_features2[index, :])
+        #     shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + str(index) +  '.html', shap.force_plot(explainer.expected_value[0], shap_values[0], test_features2[index], feature_names=self.feature_names))
 
         
 

@@ -20,8 +20,8 @@ RESULTS_ROOT_DIRECTORY = 'results/'
 TRAINING_TEST_DATA_RATIO = 0.8
 
 #Reference Properties you wish to classify here
-PROPERTY_NAMES = ['presence_general', 'presence_family', 'presence_two_pers', 'presence_single'] 
-#PROPERTY_NAMES = ['num_devices']
+#PROPERTY_NAMES = ['presence_general', 'presence_family', 'presence_two_pers', 'presence_single'] 
+PROPERTY_NAMES = ['cooking']
 
 #Weeks of the cer data set used
 WEEKS = list(range(30, 51))

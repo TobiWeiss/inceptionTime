@@ -97,20 +97,24 @@ if 'Explain' in sys.argv:
     #model = keras.models.load_model('./results/inception/_itr_1/single/last_model.hdf5', compile=True)
     # explainer_lime = xai_lime.Lime(property_name='cooking', class_names=['Not Electric', 'Electric'], num_features= 20)
     # explainer_lime.create_explanations(save_plots = True, use_feature_names= True)
-    # explainer_shap = xai_shap.Shap(property_name='cooking', class_names=['Not Electric', 'Electric'], num_features= 20)
-    # explainer_shap.create_explanations(save_plots = True, use_feature_names=True)
+    explainer_shap = xai_shap.Shap(property_name='cooking', class_names=['Not Electric', 'Electric'], num_features= 20)
+    explainer_shap.create_explanations(save_plots = True, use_feature_names=True)
     # explainer_lime = xai_lime.Lime(property_name='space_heating', class_names=['Not Electric', 'Electric'], num_features= 20)
     # explainer_lime.create_explanations(save_plots = True, use_feature_names= True)
-    explainer_shap = xai_shap.Shap(property_name='space_heating', class_names=['Not Electric', 'Electric'], num_features= 20)
-    explainer_shap.create_explanations(save_plots = True, use_feature_names=True)
-    explainer_lime = xai_lime.Lime(property_name='water_heating', class_names=['Not Electric', 'Electric'], num_features= 20)
-    explainer_lime.create_explanations(save_plots = True, use_feature_names= True)
-    explainer_shap = xai_shap.Shap(property_name='water_heating', class_names=['Not Electric', 'Electric'], num_features= 20)
-    explainer_shap.create_explanations(save_plots = True, use_feature_names=True)
+    # explainer_shap = xai_shap.Shap(property_name='space_heating', class_names=['Not Electric', 'Electric'], num_features= 20)
+    # explainer_shap.create_explanations(save_plots = True, use_feature_names=True)
+    # explainer_lime = xai_lime.Lime(property_name='water_heating', class_names=['Not Electric', 'Electric'], num_features= 20)
+    # explainer_lime.create_explanations(save_plots = True, use_feature_names= True)
+    # explainer_shap = xai_shap.Shap(property_name='water_heating', class_names=['Not Electric', 'Electric'], num_features= 20)
+    # explainer_shap.create_explanations(save_plots = True, use_feature_names=True)
     # explainer_lime = xai_lime.Lime(property_name='num_devices', class_names=['Few', 'Moderate', 'Many'], num_features= 20)
     # explainer_lime.create_explanations()
     # explainer_shap = xai_shap.Shap(property_name='num_devices', class_names=['Few', 'Moderate', 'Many'], num_features= 20)
     # explainer_shap.create_explanations()
+    # explainer_lime = xai_lime.Lime(property_name='presence_two_pers', class_names=['Present', 'Not Present'], num_features= 20)
+    # explainer_lime.create_explanations(save_plots = True, use_feature_names= True)
+    # explainer_shap = xai_shap.Shap(property_name='presence_two_pers', class_names=['Present', 'Not Present'], num_features= 20)
+    # explainer_shap.create_explanations(save_plots = True, use_feature_names=True)
 
 if 'CompareExplanations' in sys.argv:
     #model = keras.models.load_model('./results/inception/_itr_1/single/last_model.hdf5', compile=True)
@@ -134,17 +138,25 @@ if 'CompareExplanations' in sys.argv:
     
     
 if 'PrepareData' in sys.argv:
-    print('Preparing consumption data...')
+    print('Preparing consumption data (normalized)')
     for property_name in PROPERTY_NAMES:
             start_time = time.time()
             print('Preparing ' + property_name)
-            prepare_data(property_name)
+            prepare_data(property_name, True)
             print('Done preparing ' + property_name)
             print("duration %s seconds" % (time.time() - start_time))
-    print('... done preparing consumption data')
-    print('Preparing random forrest features...')
+    print('Done preparing consumption data (normalized)')
+    print('Preparing consumption data (original)')
+    for property_name in PROPERTY_NAMES:
+            start_time = time.time()
+            print('Preparing ' + property_name)
+            prepare_data(property_name, False)
+            print('Done preparing ' + property_name)
+            print("duration %s seconds" % (time.time() - start_time))
+    print('Done preparing consumption data (original)')
+    print('Preparing random forrest features')
     get_rf_features()
-    print('... done preparing random forrest features')
+    print('Done preparing random forrest features')
 
 if 'RandomForrest' in sys.argv:
     for property_name in PROPERTY_NAMES:

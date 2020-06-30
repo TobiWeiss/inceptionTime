@@ -87,29 +87,38 @@ def clear_directory(directory_path):
 
 # Reads the prepared data for each referenced property into a dictionary
 # e.g. datasets_dict['single'][0] returns the training data for the property single
-def read_all_properties(root_dir):
+def read_all_properties(root_dir, use_normalized_data = True):
     properties_dict = {}
 
     dataset_names_to_sort = []
 
-    
-    for property_name in PROPERTY_NAMES:
-        root_dir_dataset = root_dir + PREPARED_DATA_ROOT_DIRECTORY + property_name + '/'
-        file_name = root_dir_dataset + property_name
-        x_train, y_train = readucr(file_name + '_train')
-        x_test, y_test = readucr(file_name + '_test')
+    if use_normalized_data == True:
+        for property_name in PROPERTY_NAMES:
+            root_dir_dataset = root_dir + PREPARED_DATA_ROOT_DIRECTORY + 'normalized/' + property_name + '/'
+            file_name = root_dir_dataset + property_name
+            x_train, y_train = readucr(file_name + '_train')
+            x_test, y_test = readucr(file_name + '_test')
 
-        properties_dict[property_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
-                                           y_test.copy())
+            properties_dict[property_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
+                                            y_test.copy())
+    else:
+         for property_name in PROPERTY_NAMES:
+            root_dir_dataset = root_dir + PREPARED_DATA_ROOT_DIRECTORY + 'original/' + property_name + '/'
+            file_name = root_dir_dataset + property_name
+            x_train, y_train = readucr(file_name + '_train')
+            x_test, y_test = readucr(file_name + '_test')
 
-        # dataset_names_to_sort.append((property_name, len(x_train)))
+            properties_dict[property_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
+                                            y_test.copy())
 
-        # dataset_names_to_sort.sort(key=operator.itemgetter(1))
+            # dataset_names_to_sort.append((property_name, len(x_train)))
 
-        # print(dataset_names_to_sort)
+            # dataset_names_to_sort.sort(key=operator.itemgetter(1))
 
-        # for i in range(len(PROPERTY_NAMES)):
-        #     PROPERTY_NAMES[i] = dataset_names_to_sort[i][0]
+            # print(dataset_names_to_sort)
+
+            # for i in range(len(PROPERTY_NAMES)):
+            #     PROPERTY_NAMES[i] = dataset_names_to_sort[i][0]
 
     return properties_dict
 
@@ -159,7 +168,7 @@ def generate_results_csv(output_file_name, root_dir, clfs):
                        columns=['property_name', 'iteration',
                                 'precision', 'accuracy', 'recall', 'mcc','auc', 'duration'])
 
-    properties_dict = read_all_properties(ROOT_DIRECTORY)
+    properties_dict = read_all_properties(ROOT_DIRECTORY, True)
     for classifier_name in clfs:
         durr = 0.0
 
@@ -244,7 +253,8 @@ def save_logs(output_directory, hist, y_pred, y_true, duration,
 
     return df_metrics
 
-#def generate_overall_results_csv(property):
+    
+
 
 
 

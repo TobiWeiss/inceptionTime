@@ -21,7 +21,7 @@ class Lime:
         self.num_features = num_features
         
     def get_model(self):
-        model = keras.models.load_model('./results5/inception/' + self.property_name + '/best_model.hdf5', compile=False)
+        model = keras.models.load_model('./results/inception/' + self.property_name + '/best_model.hdf5', compile=False)
 
         return model
     
@@ -49,7 +49,7 @@ class Lime:
     
     def get_training_data(self):
         root_dir = ROOT_DIRECTORY
-        datasets_dict = read_all_properties(root_dir)
+        datasets_dict = read_all_properties(root_dir, True)
         x_train = datasets_dict[self.property_name][0]
     
         if len(x_train.shape) == 2:  # if univariate
@@ -60,7 +60,7 @@ class Lime:
     
     def get_explainees(self):
         root_dir = ROOT_DIRECTORY
-        datasets_dict = read_all_properties(root_dir)
+        datasets_dict = read_all_properties(root_dir, True)
         x_test = datasets_dict[self.property_name][2]
 
         if len(x_test.shape) == 2:  # if univariate

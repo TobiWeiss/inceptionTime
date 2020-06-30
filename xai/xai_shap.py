@@ -11,6 +11,7 @@ import copy
 import numpy as np
 import pandas as pd
 import heapq
+from xai.xai_plots import create_plot_shap
 
 
 class Shap:
@@ -48,7 +49,7 @@ class Shap:
     
     def get_training_data(self):
         root_dir = ROOT_DIRECTORY
-        datasets_dict = read_all_properties(root_dir)
+        datasets_dict = read_all_properties(root_dir, True)
         x_train = datasets_dict[self.property_name][0]
     
         if len(x_train.shape) == 2:  # if univariate
@@ -59,7 +60,7 @@ class Shap:
     
     def get_explainees(self):
         root_dir = ROOT_DIRECTORY
-        datasets_dict = read_all_properties(root_dir)
+        datasets_dict = read_all_properties(root_dir, True)
         x_test = datasets_dict[self.property_name][2]
 
         if len(x_test.shape) == 2:  # if univariate
@@ -87,9 +88,11 @@ class Shap:
         if save_plots:
             for household in test_data:
                 label = self.get_label(household)
-                if counter < 10 and label == 1:
+                if counter < 10 and label == 1 and self.get_model().predict(np.array([household]))[0,1] > 0.9:
                     shap_values = explainer.shap_values(np.array([household]))
-                    shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + str(counter) +  '.html', shap.force_plot(explainer.expected_value[self.get_label(household)], shap_values[self.get_label(household)][0].flatten(), show=False, features=household.flatten(), feature_names=feature_names))
+                    if counter == 4:
+                        create_plot_shap(shap_values[1][0].flatten(), self.property_name, counter)
+                    #shap.save_html('explanations_shap/explanation_shap_' + self.property_name + '_' + str(counter) +  '.html', shap.force_plot(explainer.expected_value[self.get_label(household)], shap_values[self.get_label(household)][0].flatten(), show=False, features=household.flatten(), feature_names=feature_names))
                 counter = counter + 1
                 if counter == 5:
                     break
